@@ -21,6 +21,8 @@ tar -xzf /root/mizan.tgz -C $APP_DIR
 if [ -d /root/mizan-data ]; then            # first deploy: seed collected history
   cp -n /root/mizan-data/*.jsonl $APP_DIR/data/ 2>/dev/null || true; rm -rf /root/mizan-data
 fi
+[ -f /root/mizan-trades.jsonl ] && { [ -f $APP_DIR/data/trades.jsonl ] || mv /root/mizan-trades.jsonl $APP_DIR/data/trades.jsonl; }
+[ -f /root/mizan-plans.json ] && { [ -f $APP_DIR/data/plans.json ] || mv /root/mizan-plans.json $APP_DIR/data/plans.json; }
 chown -R $APP_USER:$APP_USER $APP_DIR
 sudo -u $APP_USER -H bash -c "cd $APP_DIR && npm install --omit=dev --no-audit --no-fund --loglevel=error" || echo "!! npm install failed (wallet sampler will stay idle)"
 
@@ -66,9 +68,23 @@ RestartSec=60
 [Install]
 WantedBy=multi-user.target
 UNIT
+cat > /etc/systemd/system/mizan-agent.service <<UNIT
+[Unit]
+Description=Mizan basket agent (runs due plans every 10 min, guarded; uses the server's Agentic Wallet session)
+After=network-online.target
+[Service]
+User=$APP_USER
+WorkingDirectory=$APP_DIR
+Environment=HOME=/home/$APP_USER
+ExecStart=/usr/bin/node scripts/agent.mjs loop
+Restart=always
+RestartSec=60
+[Install]
+WantedBy=multi-user.target
+UNIT
 systemctl daemon-reload
-systemctl enable mizan-web mizan-collect mizan-wallet >/dev/null
-systemctl restart mizan-web mizan-collect mizan-wallet
+systemctl enable mizan-web mizan-collect mizan-wallet mizan-agent >/dev/null
+systemctl restart mizan-web mizan-collect mizan-wallet mizan-agent
 
 # 3. Caddy: own site file + import line (idempotent), validate before reload, roll back on failure
 mkdir -p /etc/caddy/sites.d
@@ -89,6 +105,6 @@ else
 fi
 
 sleep 3
-systemctl is-active mizan-web mizan-collect mizan-wallet agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (mizan-web mizan-collect mizan-wallet agentcensus-web caddy): /'
+systemctl is-active mizan-web mizan-collect mizan-wallet mizan-agent agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (mizan-web mizan-collect mizan-wallet mizan-agent agentcensus-web caddy): /'
 curl -s -o /dev/null -w "-- local dashboard: HTTP %{http_code}\n" http://127.0.0.1:8090/
 echo "== Done: https://$DOMAIN (HTTPS once DNS A record -> this server) =="
