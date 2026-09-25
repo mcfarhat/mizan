@@ -6,8 +6,9 @@ import { SIZES, SAFE_PCT } from './snapshot.mjs';
 
 const DATA = join(ROOT, 'data');
 export const STALE_SEC = 3600;       // price older than 1h = stale
-export const TRAP_PCT = 5;           // real cost > 5% over fair...
-export const TRAP_IMPACT = 1;        // ...while the API claims < 1% impact
+export const TRAP_PCT = 5;           // trap = the aggregator's "best" route costs > 5% over fair value
+// NOTE: the Web3 API field priceImpactPercent is a FRACTION (0.76 = 76%), not a percent.
+// Verified against 2,530 quotes: it matches realized loss (median diff 0.06 pp). Displayed x100.
 
 export function loadRows(hours = 24) {
   if (!existsSync(DATA)) return [];
@@ -33,8 +34,9 @@ function flags(r) {
   if (r.quotes?.[SIZES[0]]?.err) f.push({ k: 'noliq', txt: 'no liquidity, cannot be bought' });
   for (const u of SIZES) {
     const q = r.quotes?.[u];
-    if (q?.costVsFairPct > TRAP_PCT && (q.reportedImpactPct ?? 0) < TRAP_IMPACT) {
-      f.push({ k: 'trap', size: u, txt: `$${fmtUsd(u)} "best" route costs +${q.costVsFairPct.toFixed(0)}% over fair; API reports ${q.reportedImpactPct?.toFixed(2)}% impact` });
+    if (q?.costVsFairPct > TRAP_PCT) {
+      const c = q.costVsFairPct > 1000 ? '>1000%' : `+${q.costVsFairPct.toFixed(0)}%`;
+      f.push({ k: 'trap', size: u, txt: `$${fmtUsd(u)} "best" route costs ${c} over fair (loses ${((q.reportedImpactPct ?? 0) * 100).toFixed(0)}% of value)` });
       break;
     }
   }
@@ -71,8 +73,8 @@ export function buildIndex(rows, cfg) {
   const persist = {};
   for (const r of rows) for (const u of SIZES) {
     const q = r.quotes?.[u]; if (!q || q.costVsFairPct == null) continue;
-    const k = `${r.symbol}@${u}`; const p = (persist[k] ||= { symbol: r.symbol, size: u, n: 0, trapped: 0, worst: 0, costs: [] });
-    p.n++; if (q.costVsFairPct > TRAP_PCT && (q.reportedImpactPct ?? 0) < TRAP_IMPACT) { p.trapped++; p.costs.push(q.costVsFairPct); }
+    const sym = r.symbol || `${r.ticker}/${r.wrapper}`; const k = `${sym}@${u}`; const p = (persist[k] ||= { symbol: sym, size: u, n: 0, trapped: 0, worst: 0, costs: [] });
+    p.n++; if (q.costVsFairPct > TRAP_PCT) { p.trapped++; p.costs.push(q.costVsFairPct); }
     p.worst = Math.max(p.worst, q.costVsFairPct);
   }
   // Rank by persistence first (share of snapshots trapped), then by typical (median) cost.

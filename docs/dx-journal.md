@@ -67,3 +67,8 @@ Sections the report must cover: onboarding time · doc issues (page + location) 
 
 ## 2026-09-25 · first basket run
 - 16:11 · `baw market-order quote` for **$2.40 NVDAon and $1.80 MSFTon** failed with `315008 SERVICE_ERROR "From token value greater than 5 USD"`, while $1.80 GOOGLB (bStocks) quoted and filled fine (realized +0.056% vs fair). So **Ondo tokens have a $5 minimum order via the Agentic Wallet**, and the error message states the rule **backwards**: the value was *less* than $5. Nothing in the docs mentions a per-issuer minimum. The executor now skips Ondo under $5 and falls back to the next-fairest wrapper.
+
+## 2026-09-25 · CORRECTION (evening): \`priceImpactPercent\` is a fraction, not a percent
+- Earlier entries above said the aggregator "reported under 1% impact" on the +47% / +329% Ondo quotes. **That was our misreading.** Cross-checking all 2,530 over-fair quotes collected so far: \`priceImpactPercent\` equals the realized value loss **as a fraction** (0.76 → 76%), median deviation 0.06 pp. The API was honest; we took the name at face value.
+- The DX finding is the **naming**: a field called \`...Percent\` that holds a 0–1 fraction. We, a careful integrator, misread it for a full day; an autonomous agent will too. Suggest renaming it (\`priceImpactRatio\`) or returning percent, and documenting the unit.
+- What stands: (1) the aggregator marks routes that lose 30–99% of value as \`isBest\` and would execute them (Ondo tokens at ≥\$5k–\$10k, and some at \$1k after hours, e.g. MSFTon \$1k → 0.00000097 tokens); (2) **the Agentic Wallet CLI quote exposes no price impact at all**, so an agent using only the wallet cannot see this.
