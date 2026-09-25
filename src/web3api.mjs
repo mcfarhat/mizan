@@ -31,8 +31,9 @@ export async function web3(label, method, path, { query, body } = {}) {
 // --- Market / RWA ---
 export const rwaPlatforms = () => web3('rwa/platforms', 'GET', '/api/v1/dex/market/rwa/platforms');
 export const rwaTokens = (query = {}) => web3('rwa/tokens', 'GET', '/api/v1/dex/market/rwa/tokens', { query });
-export const rwaPrice = (addrs) => web3('rwa/price', 'POST', '/api/v1/dex/market/rwa/price',
-  { body: addrs.map(a => ({ binanceChainId: '56', tokenContractAddress: a })) });
+// NOTE: POST -> "Request method 'POST' not supported"; GET needs plural param tokenContractAddresses (comma list)
+export const rwaPrice = (addrs) => web3('rwa/price', 'GET', '/api/v1/dex/market/rwa/price',
+  { query: { binanceChainId: '56', tokenContractAddresses: [].concat(addrs).join(',') } });
 export const marketPrice = (addrs) => web3('market/price', 'POST', '/api/v1/dex/market/price',
   { body: addrs.map(a => ({ binanceChainId: '56', tokenContractAddress: a })) });
 

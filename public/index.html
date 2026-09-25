@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mizan · fair price for tokenized stocks</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1c1b19;--mute:#6b6860;--line:#e4e1d8;--good:#1f7a4d;--goodbg:#e3f3ea;--warn:#9a6700;--warnbg:#fbf0d6;--bad:#b42318;--badbg:#fde7e4;--accent:#0f5c52;--chip:#efece4}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121211;--card:#1b1b19;--ink:#ecebe6;--mute:#a09d94;--line:#2e2d29;--good:#5fd39a;--goodbg:#15301f;--warn:#f0c060;--warnbg:#342a12;--bad:#ff8a7a;--badbg:#3a1714;--accent:#6fd1c2;--chip:#26251f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font-size:26px;margin:0;letter-spacing:-.01em}h1 .ar{color:var(--accent);font-weight:500;margin-left:6px}
+.tag{color:var(--mute)}
+.meta{color:var(--mute);font-size:13px;margin-top:4px}
+.banner{margin:20px 0;padding:16px 18px;border-radius:12px;background:var(--badbg);border:1px solid color-mix(in srgb,var(--bad) 30%,transparent)}
+.banner b{color:var(--bad)}.banner .big{font-size:20px;font-weight:650;margin-bottom:4px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 12px}
+.seg{display:inline-flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:var(--ink);padding:6px 11px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--card);box-shadow:0 1px 2px #0002;font-weight:600}
+label.tg{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:pointer}
+.grid{display:grid;gap:10px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:120px 1fr 230px;gap:12px;align-items:center;cursor:pointer}
+.row:hover{border-color:var(--accent)}
+.tk{font-weight:700;font-size:17px}.sh{font-size:12px;color:var(--mute)}
+.sh.ok{color:var(--good)}
+.ws{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.w{border-radius:9px;padding:7px 9px;background:var(--chip);min-width:0}
+.w .s{font-size:12px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
+.w .v{font-weight:650;font-variant-numeric:tabular-nums}
+.w.good{background:var(--goodbg)}.w.good .v{color:var(--good)}
+.w.warn{background:var(--warnbg)}.w.warn .v{color:var(--warn)}
+.w.bad{background:var(--badbg)}.w.bad .v{color:var(--bad)}
+.w.na .v{color:var(--mute);font-weight:500}
+.rec{font-size:13px}.rec b{font-size:15px}.rec .mute{color:var(--mute)}
+.detail{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:10px;display:none}
+.row.open .detail{display:block}
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.flag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--chip)}
+.flag.trap{background:var(--badbg);color:var(--bad)}.flag.stale,.flag.noliq{background:var(--warnbg);color:var(--warn)}
+svg.chart{width:100%;height:120px}
+.legend{font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px}
+footer{margin-top:28px;color:var(--mute);font-size:13px}
+code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
+@media (max-width:760px){.row{grid-template-columns:1fr}.ws{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Mizan<span class="ar">ميزان</span></h1><span class="tag">What does a tokenized stock on BNB Chain <i>really</i> cost?</span></header>
+  <div class="meta" id="meta">loading…</div>
+  <div id="banner"></div>
+  <div class="controls">
+    <span class="tag">Trade size</span><div class="seg" id="sizes"></div>
+    <label class="tg"><input type="checkbox" id="halal"> Shariah-screened only</label>
+  </div>
+  <div class="grid" id="list"></div>
+  <footer>
+    Fair price = underlying stock price × the token's shares multiplier (each issuer reinvests dividends differently).
+    Real cost = what Binance Web3 aggregator's <i>best</i> quote actually delivers, vs fair. Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.
+    Data refreshes every 5 min · API: <code>/api/index</code> · <code>/api/route/NVDA?usd=5000</code>
+  </footer>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let IDX=null,SIZE=1000,HALAL=false,OPEN=new Set();
+const fmtUsd=u=>u>=1000?`$${u/1000}k`:`$${u}`;
+const pct=(x,d=2)=>x==null?'–':(x>0?'+':'')+x.toFixed(d)+'%';
+const cls=c=>c==null?'na':c<=0.5?'good':c<=5?'warn':'bad';
+const WNAME={ondo:'Ondo',bstocks:'bStocks',xstocks:'xStocks'};
+const COL={ondo:'#2f6fdb',bstocks:'#d4a017',xstocks:'#9b59b6'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function load(){
+  IDX=await (await fetch('/api/index')).json();
+  const w=IDX.window;
+  $('#meta').textContent=`${IDX.tickers.length} stocks × 3 issuers · ${w.passes} snapshots since ${new Date(w.from).toUTCString().slice(5,22)} UTC · US session: ${IDX.tickers[0]?.session??'?'} · updated ${new Date(IDX.generatedAt).toLocaleTimeString()}`;
+  const t=IDX.traps[0];
+  $('#banner').innerHTML=t?`<div class="banner"><div class="big">Trap: a ${fmtUsd(t.size)} buy of <b>${esc(t.symbol)}</b> through the aggregator's "best" route costs up to <b>+${t.worst.toFixed(0)}%</b> over fair value.</div>
+    It happened in ${t.trapped} of ${t.n} snapshots, and every time the API reported under 1% price impact. ${IDX.traps.length>1?`Also: ${IDX.traps.slice(1,3).map(x=>`${esc(x.symbol)} @ ${fmtUsd(x.size)} (up to +${x.worst.toFixed(0)}%, ${x.trapped}/${x.n})`).join(', ')}.`:''}</div>`:'';
+  $('#sizes').innerHTML=IDX.sizes.map(s=>`<button data-s="${s}" class="${s===SIZE?'on':''}">${fmtUsd(s)}</button>`).join('');
+  render();
+}
+function render(){
+  const list=IDX.tickers.filter(t=>!HALAL||/SPUS|HLAL/.test(t.shariah));
+  $('#list').innerHTML=list.map(t=>{
+    const best=t.bestBySize[SIZE];
+    const ws=['ondo','bstocks','xstocks'].map(k=>{
+      const w=t.wrappers.find(x=>x.wrapper===k);
+      if(!w)return `<div class="w na"><div class="s"><span>${WNAME[k]}</span></div><div class="v">not issued</div></div>`;
+      const q=w.quotes?.[SIZE];const c=q?.costVsFairPct;
+      const v=c!=null?pct(c):q?.err?'no liquidity':'–';
+      return `<div class="w ${cls(c)}"><div class="s"><span>${esc(w.symbol||WNAME[k])}</span><span>${q?.mode??''}</span></div><div class="v">${v}</div></div>`;
+    }).join('');
+    const flags=t.wrappers.flatMap(w=>w.flags.map(f=>`<span class="flag ${f.k}">${esc(w.symbol)}: ${esc(f.txt)}</span>`)).join('');
+    const halalTxt=/SPUS|HLAL/.test(t.shariah)?`<span class="sh ok">✓ Shariah (${esc(t.shariah)})</span>`:`<span class="sh">${esc(t.shariah)}</span>`;
+    return `<div class="row ${OPEN.has(t.ticker)?'open':''}" data-t="${t.ticker}">
+      <div><div class="tk">${t.ticker}</div>${halalTxt}</div>
+      <div class="ws">${ws}</div>
+      <div class="rec">${best?`Buy ${fmtUsd(SIZE)} via <b>${esc(best.symbol)}</b><br><span class="mute">real cost ${pct(best.c)} vs fair</span>`:'<span class="mute">no route</span>'}
+        ${t.recommend?`<br><span class="mute">safe up to ${fmtUsd(t.recommend.safeSizeUsd)} via ${esc(t.recommend.symbol)}</span>`:''}</div>
+      <div class="detail"><div class="flags">${flags||'<span class="flag">no issues flagged</span>'}</div><div class="chartbox" id="c-${t.ticker}">loading history…</div></div>
+    </div>`}).join('');
+  for(const t of OPEN)chart(t);
+}
+async function chart(tk){
+  const el=document.getElementById('c-'+tk);if(!el)return;
+  const h=await (await fetch(`/api/history/${tk}?size=${SIZE}`)).json();
+  const series=Object.entries(h.series).map(([sym,pts])=>({sym,w:sym.endsWith('on')?'ondo':sym.endsWith('x')?'xstocks':'bstocks',pts:pts.filter(p=>p.cost!=null)})).filter(s=>s.pts.length);
+  if(!series.length){el.innerHTML='<span class="tag">no quotable history at this size</span>';return}
+  const all=series.flatMap(s=>s.pts);const t0=Math.min(...all.map(p=>+new Date(p.at))),t1=Math.max(...all.map(p=>+new Date(p.at)));
+  const ys=all.map(p=>Math.log10(1+Math.max(p.cost,0)));const ymax=Math.max(...ys,Math.log10(1.6));
+  const X=t=>10+(t1>t0?(t-t0)/(t1-t0):0)*580,Y=v=>110-(Math.log10(1+Math.max(v,0))/ymax)*100;
+  const paths=series.map(s=>`<polyline fill="none" stroke="${COL[s.w]}" stroke-width="2" points="${s.pts.map(p=>`${X(+new Date(p.at)).toFixed(1)},${Y(p.cost).toFixed(1)}`).join(' ')}"/>`).join('');
+  el.innerHTML=`<div class="legend">${series.map(s=>`<span><i style="background:${COL[s.w]}"></i>${esc(s.sym)} · last ${pct(s.pts.at(-1).cost)}</span>`).join('')}<span>real cost over fair for a ${fmtUsd(SIZE)} buy (log scale)</span></div>
+  <svg class="chart" viewBox="0 0 600 120" preserveAspectRatio="none"><line x1="10" x2="590" y1="${Y(0.5)}" y2="${Y(0.5)}" stroke="currentColor" opacity=".25" stroke-dasharray="4 4"/>${paths}</svg>`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#sizes button');if(b){SIZE=+b.dataset.s;document.querySelectorAll('#sizes button').forEach(x=>x.classList.toggle('on',x===b));render();return}
+  const r=e.target.closest('.row');if(r){const t=r.dataset.t;OPEN.has(t)?OPEN.delete(t):OPEN.add(t);r.classList.toggle('open');if(OPEN.has(t))chart(t)}
+});
+$('#halal').addEventListener('change',e=>{HALAL=e.target.checked;render()});
+load();setInterval(load,60000);
+</script>
+</body>
+</html>
