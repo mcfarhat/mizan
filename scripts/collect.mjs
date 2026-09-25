@@ -5,7 +5,12 @@ import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../src/env.mjs';
 import { calls } from '../src/http.mjs';
-import { snapshotTicker, marketContext, WRAPPERS } from '../src/snapshot.mjs';
+import { snapshotTicker, marketContext, WRAPPERS, SIZES } from '../src/snapshot.mjs';
+
+// core tickers: full size ladder every pass; extended: 3 sizes, a rotating third of them each pass (~15 min refresh)
+const EXT_SIZES = [100, 1000, 10000];
+const EXT_SLICES = 3;
+let passNo = 0;
 
 const EVERY_MS = 5 * 60 * 1000;
 const once = process.argv.includes('--once');
@@ -18,9 +23,13 @@ async function pass() {
   const ctx = await marketContext(all);
   const file = join(ROOT, 'data', `snapshots-${new Date().toISOString().slice(0, 10)}.jsonl`);
   let n = 0;
-  for (const [ticker, t] of Object.entries(cfg.tickers)) {
+  const entries = Object.entries(cfg.tickers);
+  const core = entries.filter(([, t]) => (t.tier || 'core') === 'core');
+  const ext = entries.filter(([, t]) => t.tier === 'extended').filter((_, i) => i % EXT_SLICES === passNo % EXT_SLICES);
+  passNo++;
+  for (const [ticker, t, sizes] of [...core.map(([a, b]) => [a, b, SIZES]), ...ext.map(([a, b]) => [a, b, EXT_SIZES])]) {
     try {
-      for (const row of await snapshotTicker(ticker, t, ctx)) { appendFileSync(file, JSON.stringify(row) + '\n'); n++; }
+      for (const row of await snapshotTicker(ticker, t, ctx, sizes)) { appendFileSync(file, JSON.stringify(row) + '\n'); n++; }
     } catch (e) { console.error(ticker, e.message); }
   }
   const errs = calls.filter(c => c.status !== 200).length;

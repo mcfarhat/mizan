@@ -13,7 +13,7 @@ const QUOTE_WALLET = () => env.WALLET_ADDRESS || '0x0D5fc8904322FBFDa2Ea5D5B7398
 const num = (x) => (x === null || x === undefined || x === '' ? null : Number(x));
 const pct = (a, b) => (a != null && b ? (a / b - 1) * 100 : null);
 
-export async function snapshotTicker(ticker, addrs, { session, marketPrices } = {}) {
+export async function snapshotTicker(ticker, addrs, { session, marketPrices } = {}, sizes = SIZES) {
   const at = new Date().toISOString();
   const rows = [];
   // Fetch all wrappers' dynamic data first: bStocks returns stockInfo.price = null, so the
@@ -40,7 +40,7 @@ export async function snapshotTicker(ticker, addrs, { session, marketPrices } = 
     row.premiumPct = pct(onchain, row.fair);
     if (w3.hasKey()) {
       let dead = false;
-      for (const usd of SIZES) {
+      for (const usd of sizes) {
         if (dead) { row.quotes[usd] = { err: 'skipped', msg: 'no liquidity at smaller size' }; continue; }
         const q = await w3.quote({ from: USDT, to: addr, amount: (BigInt(usd) * 10n ** 18n).toString(), wallet: QUOTE_WALLET() });
         const list = Array.isArray(q.body?.data) ? q.body.data : [];
@@ -58,10 +58,10 @@ export async function snapshotTicker(ticker, addrs, { session, marketPrices } = 
         };
       }
     }
-    const ok = SIZES.filter(u => row.quotes[u]?.costVsFairPct != null && row.quotes[u].costVsFairPct <= SAFE_PCT);
-    // safe size = largest contiguous ladder size within SAFE_PCT (stop at first breach)
-    let safe = 0; for (const u of SIZES) { const c = row.quotes[u]?.costVsFairPct; if (c != null && c <= SAFE_PCT) safe = u; else break; }
-    row.safeSizeUsd = row.quotes[SIZES[0]]?.costVsFairPct == null ? null : safe;
+        // safe size = largest contiguous ladder size within SAFE_PCT (stop at first breach)
+    let safe = 0; for (const u of sizes) { const c = row.quotes[u]?.costVsFairPct; if (c != null && c <= SAFE_PCT) safe = u; else break; }
+    row.safeSizeUsd = row.quotes[sizes[0]]?.costVsFairPct == null ? null : safe;
+    row.tier = addrs.tier || 'core';
     rows.push(row);
   }
   return rows;

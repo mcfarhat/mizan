@@ -22,6 +22,7 @@ if [ -d /root/mizan-data ]; then            # first deploy: seed collected histo
   cp -n /root/mizan-data/*.jsonl $APP_DIR/data/ 2>/dev/null || true; rm -rf /root/mizan-data
 fi
 chown -R $APP_USER:$APP_USER $APP_DIR
+sudo -u $APP_USER -H bash -c "cd $APP_DIR && npm install --omit=dev --no-audit --no-fund --loglevel=error" || echo "!! npm install failed (wallet sampler will stay idle)"
 
 # 2. systemd units
 cat > /etc/systemd/system/mizan-web.service <<UNIT
@@ -51,9 +52,23 @@ RestartSec=30
 [Install]
 WantedBy=multi-user.target
 UNIT
+cat > /etc/systemd/system/mizan-wallet.service <<UNIT
+[Unit]
+Description=Mizan wallet sampler (Agentic Wallet QUOTES ONLY, every 15 min; idle until 'baw auth signin' as user mizan)
+After=network-online.target
+[Service]
+User=$APP_USER
+WorkingDirectory=$APP_DIR
+Environment=HOME=/home/$APP_USER
+ExecStart=/usr/bin/node scripts/wallet-sampler.mjs
+Restart=always
+RestartSec=60
+[Install]
+WantedBy=multi-user.target
+UNIT
 systemctl daemon-reload
-systemctl enable mizan-web mizan-collect >/dev/null
-systemctl restart mizan-web mizan-collect
+systemctl enable mizan-web mizan-collect mizan-wallet >/dev/null
+systemctl restart mizan-web mizan-collect mizan-wallet
 
 # 3. Caddy: own site file + import line (idempotent), validate before reload, roll back on failure
 mkdir -p /etc/caddy/sites.d
@@ -74,6 +89,6 @@ else
 fi
 
 sleep 3
-systemctl is-active mizan-web mizan-collect agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (mizan-web mizan-collect agentcensus-web caddy): /'
+systemctl is-active mizan-web mizan-collect mizan-wallet agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (mizan-web mizan-collect mizan-wallet agentcensus-web caddy): /'
 curl -s -o /dev/null -w "-- local dashboard: HTTP %{http_code}\n" http://127.0.0.1:8090/
 echo "== Done: https://$DOMAIN (HTTPS once DNS A record -> this server) =="

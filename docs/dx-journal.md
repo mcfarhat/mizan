@@ -72,3 +72,16 @@ Sections the report must cover: onboarding time · doc issues (page + location) 
 - Earlier entries above said the aggregator "reported under 1% impact" on the +47% / +329% Ondo quotes. **That was our misreading.** Cross-checking all 2,530 over-fair quotes collected so far: \`priceImpactPercent\` equals the realized value loss **as a fraction** (0.76 → 76%), median deviation 0.06 pp. The API was honest; we took the name at face value.
 - The DX finding is the **naming**: a field called \`...Percent\` that holds a 0–1 fraction. We, a careful integrator, misread it for a full day; an autonomous agent will too. Suggest renaming it (\`priceImpactRatio\`) or returning percent, and documenting the unit.
 - What stands: (1) the aggregator marks routes that lose 30–99% of value as \`isBest\` and would execute them (Ondo tokens at ≥\$5k–\$10k, and some at \$1k after hours, e.g. MSFTon \$1k → 0.00000097 tokens); (2) **the Agentic Wallet CLI quote exposes no price impact at all**, so an agent using only the wallet cannot see this.
+
+## 2026-09-25 ~21:00 UTC · Two Binance routing engines disagree by ~370 points
+- **Same token, same minute, same wallet address.** Web3 REST `aggregator/quote` (server collector, userWalletAddress = our Agentic Wallet) at 20:59:45Z: $10k USDT → GOOGLon = **+369% over fair** (route PancakeSwap V3 / Uniswap V4, `isBest`). **Agentic Wallet** `baw market-order quote` at 21:00:12Z: $10k → GOOGLon = **−0.14%** (29.03 tokens).
+- Wallet quotes at 21:00Z, all fair: GOOGLon $10k −0.14%, NVDAon $10k −0.11%, MSFTon $1k −0.44% / $10k −0.45%, and bStocks at −0.05% to +0.04%. At the same time REST gave MSFTon $1k → ~0 tokens (>1000%) and NVDAon $10k ~+190%.
+- So the public Web3 API (the module this hackathon requires) and Binance's own Agentic Wallet do **not** reach the same liquidity. The wallet evidently reaches Ondo's liquidity; the REST "best" route doesn't, at least by default. Nothing in the docs says the engines differ. Builders on the REST API get routes that lose most of an order's value; wallet users get fair prices.
+- Consequence for Mizan: best execution depends on **channel** as well as issuer. Next: probe REST vendor params (engines.mjs) to see whether the fair route is reachable from the API.
+- 21:08Z · engines.mjs, GOOGLon $10k, same wallet address, same minute:
+  - REST default (LiquidMesh): 6.18 tokens, **+369%**
+  - REST vendor=Pancake: 8.06 tokens, +260%
+  - REST vendor=LiquidMesh: same as default
+  - REST without a wallet address: `40001 userWalletAddress is required for RFQ (Ondo) quote`
+  - **Agentic Wallet: 29.04 tokens, −0.19%**
+- **Across 6,666 Ondo quotes collected via the REST aggregator, `executionMode` was SWAP every time. Not once RFQ.** The docs describe an RFQ flow for tokenized stocks (quote → EIP-712 → order/submit), and the API *demands* a wallet address "for RFQ (Ondo)", but it never actually serves an RFQ route. As far as an API integrator can tell, Ondo's own liquidity is reachable only through the Agentic Wallet. No documented vendor value unlocks it.

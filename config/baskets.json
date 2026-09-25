@@ -47,6 +47,41 @@
         "broad",
         "all five"
       ]
+    },
+    "halal-semis": {
+      "name": "Halal Semiconductors",
+      "desc": "Chip designers, memory and equipment",
+      "weights": {
+        "NVDA": 25,
+        "AMD": 20,
+        "AVGO": 20,
+        "MU": 15,
+        "QCOM": 10,
+        "AMAT": 10
+      },
+      "aliases": [
+        "semis",
+        "semiconductors",
+        "chip makers",
+        "chipmakers"
+      ]
+    },
+    "halal-health": {
+      "name": "Halal Healthcare",
+      "desc": "Large-cap pharma and life sciences",
+      "weights": {
+        "LLY": 30,
+        "JNJ": 20,
+        "ABBV": 20,
+        "MRK": 15,
+        "TMO": 15
+      },
+      "aliases": [
+        "healthcare",
+        "health care",
+        "pharma",
+        "medical"
+      ]
     }
   },
   "themes": {
@@ -110,6 +145,140 @@
       "e-commerce",
       "retail",
       "aws"
+    ],
+    "AMD": [
+      "chip",
+      "chips",
+      "semi",
+      "semis",
+      "gpu",
+      "amd",
+      "ai"
+    ],
+    "AVGO": [
+      "chip",
+      "chips",
+      "semi",
+      "semis",
+      "broadcom",
+      "networking"
+    ],
+    "MU": [
+      "memory",
+      "chip",
+      "chips",
+      "micron",
+      "dram"
+    ],
+    "QCOM": [
+      "chip",
+      "chips",
+      "mobile",
+      "qualcomm"
+    ],
+    "AMAT": [
+      "semiconductor",
+      "equipment",
+      "applied"
+    ],
+    "LLY": [
+      "pharma",
+      "health",
+      "healthcare",
+      "obesity",
+      "lilly"
+    ],
+    "JNJ": [
+      "pharma",
+      "health",
+      "healthcare",
+      "medical"
+    ],
+    "ABBV": [
+      "pharma",
+      "biotech",
+      "health"
+    ],
+    "MRK": [
+      "pharma",
+      "health",
+      "vaccines"
+    ],
+    "TMO": [
+      "lab",
+      "life",
+      "sciences",
+      "health"
+    ],
+    "ABT": [
+      "medical",
+      "devices",
+      "health"
+    ],
+    "CRWD": [
+      "cybersecurity",
+      "security",
+      "cyber"
+    ],
+    "PANW": [
+      "cybersecurity",
+      "security",
+      "cyber",
+      "firewall"
+    ],
+    "ORCL": [
+      "database",
+      "cloud",
+      "software",
+      "oracle"
+    ],
+    "CRM": [
+      "software",
+      "crm",
+      "salesforce",
+      "saas"
+    ],
+    "ADBE": [
+      "software",
+      "creative",
+      "adobe",
+      "saas"
+    ],
+    "IBM": [
+      "enterprise",
+      "software",
+      "ibm"
+    ],
+    "CSCO": [
+      "networking",
+      "cisco"
+    ],
+    "XOM": [
+      "oil",
+      "energy",
+      "exxon"
+    ],
+    "PG": [
+      "consumer",
+      "staples",
+      "household"
+    ],
+    "PEP": [
+      "consumer",
+      "staples",
+      "food",
+      "drinks",
+      "pepsi"
+    ],
+    "HD": [
+      "retail",
+      "home",
+      "housing"
+    ],
+    "UBER": [
+      "ride",
+      "mobility",
+      "uber"
     ]
   }
 }

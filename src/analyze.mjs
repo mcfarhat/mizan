@@ -22,6 +22,16 @@ export function loadRows(hours = 24) {
   return rows;
 }
 
+// Agentic Wallet quotes (channel comparison), from scripts/wallet-sampler.mjs
+export function loadWallet(hours = 6) {
+  if (!existsSync(DATA)) return {};
+  const since = Date.now() - hours * 3600e3, latest = {};
+  for (const f of readdirSync(DATA).filter(f => f.startsWith('wallet-')).sort().slice(-2))
+    for (const l of readFileSync(join(DATA, f), 'utf8').split('\n')) {
+      if (!l) continue; try { const r = JSON.parse(l); if (Date.parse(r.at) >= since && r.qty) latest[`${r.ticker}/${r.wrapper}/${r.usd}`] = r; } catch {}
+    }
+  return latest;
+}
 export function safeSize(r) {
   if (r.quotes?.[SIZES[0]]?.costVsFairPct == null) return null;
   let safe = 0;
@@ -45,11 +55,14 @@ function flags(r) {
 export const fmtAge = (s) => s < 3600 ? `${Math.round(s / 60)} min` : s < 86400 ? `${(s / 3600).toFixed(1)} h` : `${(s / 86400).toFixed(1)} days`;
 export const fmtUsd = (u) => u >= 1000 ? `${u / 1000}k` : String(u);
 
-export function buildIndex(rows, cfg) {
+export function buildIndex(rows, cfg, wallet = loadWallet()) {
   const latest = {};
   for (const r of rows) latest[`${r.ticker}/${r.wrapper}`] = r;
   const byTicker = {};
-  for (const r of Object.values(latest)) (byTicker[r.ticker] ||= []).push({ ...r, safeSizeUsd: safeSize(r), flags: flags(r) });
+  for (const r of Object.values(latest)) {
+    const wq = {}; for (const u of [1000, 10000]) { const x = wallet[`${r.ticker}/${r.wrapper}/${u}`]; if (x) wq[u] = { costVsFairPct: x.costVsFairPct, qty: x.qty, at: x.at }; }
+    (byTicker[r.ticker] ||= []).push({ ...r, safeSizeUsd: safeSize(r), flags: flags(r), wallet: wq });
+  }
 
   const tickers = Object.entries(byTicker).map(([ticker, ws]) => {
     // best route per size = lowest real cost over fair among wrappers that quote
@@ -61,7 +74,7 @@ export function buildIndex(rows, cfg) {
     }
     const safest = ws.filter(w => w.safeSizeUsd != null).sort((a, b) => (b.safeSizeUsd - a.safeSizeUsd) || ((a.quotes?.[SIZES[0]]?.costVsFairPct ?? 9) - (b.quotes?.[SIZES[0]]?.costVsFairPct ?? 9)))[0];
     return {
-      ticker, shariah: cfg.tickers[ticker]?.shariah ?? 'unknown',
+      ticker, shariah: cfg.tickers[ticker]?.shariah ?? 'unknown', tier: cfg.tickers[ticker]?.tier ?? 'core',
       session: ws[0]?.session, at: ws.map(w => w.at).sort().pop(),
       wrappers: ws.sort((a, b) => ['ondo', 'bstocks', 'xstocks'].indexOf(a.wrapper) - ['ondo', 'bstocks', 'xstocks'].indexOf(b.wrapper)),
       bestBySize, recommend: safest ? { wrapper: safest.wrapper, symbol: safest.symbol, safeSizeUsd: safest.safeSizeUsd } : null,
@@ -84,7 +97,13 @@ export function buildIndex(rows, cfg) {
     const m = med(costs); return { ...p, rate: p.trapped / p.n, median: m, exhausted: m > 1000 };
   }).sort((a, b) => (b.rate - a.rate) || ((a.exhausted - b.exhausted)) || (b.median - a.median));
   const snapshots = new Set(rows.map(r => r.at.slice(0, 16))).size;
-  return { generatedAt: new Date().toISOString(), sizes: SIZES, safePct: SAFE_PCT, trapPct: TRAP_PCT, window: { from: rows[0]?.at, to: rows.at(-1)?.at, rows: rows.length, passes: snapshots }, traps, tickers };
+  const channels = [];
+  for (const t of tickers) for (const w of t.wrappers) for (const u of [10000, 1000]) {
+    const api = w.quotes?.[u]?.costVsFairPct, wal = w.wallet?.[u]?.costVsFairPct;
+    if (api != null && wal != null) channels.push({ ticker: t.ticker, symbol: w.symbol, usd: u, apiCostPct: api, walletCostPct: wal, gap: api - wal, walletAt: w.wallet[u].at });
+  }
+  channels.sort((a, b) => b.gap - a.gap);
+  return { generatedAt: new Date().toISOString(), sizes: SIZES, safePct: SAFE_PCT, trapPct: TRAP_PCT, window: { from: rows[0]?.at, to: rows.at(-1)?.at, rows: rows.length, passes: snapshots }, traps, channels, tickers };
 }
 
 export function history(rows, ticker, size = 10000) {

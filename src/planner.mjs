@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { ROOT } from './env.mjs';
 
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'config', f), 'utf8'));
-// screened = held by BOTH Shariah ETFs (exact 'SPUS+HLAL'); 'HLAL (SPUS unconfirmed)' does not pass
-export const isScreened = (shariah) => (shariah || '').trim() === 'SPUS+HLAL';
+// screened = in the SPUS holdings (S&P 500 Shariah, AAOIFI-based; full list in config/shariah.json)
+export const isScreened = (shariah) => /^SPUS/.test((shariah || '').trim());
 
 // Shariah screen: ON by default. Turn off per plan with "--no-screen" / words like "unscreened", "no screen",
 // "any stock", "not halal"; or globally with SHARIAH_SCREEN=off in .env.

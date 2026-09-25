@@ -33,6 +33,10 @@ label.tg{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:po
 .w.warn{background:var(--warnbg)}.w.warn .v{color:var(--warn)}
 .w.bad{background:var(--badbg)}.w.bad .v{color:var(--bad)}
 .w.na .v{color:var(--mute);font-weight:500}
+.wal{font-size:12px;color:var(--mute);margin-top:2px}.wal b{color:var(--ink)}
+.chan{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}
+.chan div{background:var(--card);border-radius:10px;padding:10px 12px}.chan span{display:block;font-size:12px;color:var(--mute)}.chan b{font-size:22px}.chan em{display:block;font-style:normal;font-size:12px;color:var(--mute)}
+.chan b.bad{color:var(--bad)}.chan b.good{color:var(--good)}.banner .note{font-size:13px;color:var(--mute)}
 .rec{font-size:13px}.rec b{font-size:15px}.rec .mute{color:var(--mute)}
 .detail{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:10px;display:none}
 .row.open .detail{display:block}
@@ -55,17 +59,18 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
   <div class="controls">
     <span class="tag">Trade size</span><div class="seg" id="sizes"></div>
     <label class="tg"><input type="checkbox" id="halal"> Shariah-screened only</label>
+    <input id="q" placeholder="Search ticker…" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:150px">
   </div>
   <div class="grid" id="list"></div>
   <footer>
     Fair price = underlying stock price × the token's shares multiplier (each issuer reinvests dividends differently).
-    Real cost = what Binance Web3 aggregator's <i>best</i> quote actually delivers, vs fair. Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.
+    Real cost = what the Binance Web3 API aggregator's <i>best</i> quote actually delivers, vs fair; "Agentic Wallet" = the same buy quoted by Binance's Agentic Wallet (sampled every 15 min, $1k and $10k). Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.
     Data refreshes every 5 min · API: <code>/api/index</code> · <code>/api/route/NVDA?usd=5000</code>
   </footer>
 </div>
 <script>
 const $=s=>document.querySelector(s);
-let IDX=null,SIZE=1000,HALAL=false,OPEN=new Set();
+let IDX=null,SIZE=1000,HALAL=false,Q='',OPEN=new Set();
 const fmtUsd=u=>u>=1000?`$${u/1000}k`:`$${u}`;
 const pct=(x,d=2)=>x==null?'–':x>1000?'>1000%':(x>0?'+':'')+x.toFixed(d)+'%';
 const cls=c=>c==null?'na':c<=0.5?'good':c<=5?'warn':'bad';
@@ -78,15 +83,26 @@ async function load(){
   const w=IDX.window;
   $('#meta').textContent=`${IDX.tickers.length} stocks × 3 issuers · ${w.passes} snapshots since ${new Date(w.from).toUTCString().slice(5,22)} UTC · US session: ${IDX.tickers[0]?.session??'?'} · updated ${new Date(IDX.generatedAt).toLocaleTimeString()}`;
   const pct0=x=>x>1000?'>1000%':'+'+x.toFixed(0)+'%';
+  const val=(usd,c)=>'$'+Math.round(usd/(1+Math.min(c,1e6)/100)).toLocaleString();
+  const ch=(IDX.channels||[]).find(x=>x.gap>5&&x.apiCostPct<1000)||(IDX.channels||[]).find(x=>x.gap>5);
   const head=IDX.traps.filter(x=>x.rate>=0.5&&x.n>=10&&!x.exhausted);
   const t=head[0];
-  $('#banner').innerHTML=t?`<div class="banner"><div class="big">Trap: a ${fmtUsd(t.size)} buy of <b>${esc(t.symbol)}</b> through the aggregator's "best" route typically costs <b>${pct0(t.median)}</b> over fair value.</div>
-    It happened in ${t.trapped} of ${t.n} snapshots (${Math.round(t.rate*100)}%), and the aggregator still marked it as the best route. The same stock via another issuer stays within 0.5%.${head.length>1?` Also: ${head.slice(1,4).map(x=>`${esc(x.symbol)} @ ${fmtUsd(x.size)} (typ. ${pct0(x.median)}, ${x.trapped}/${x.n})`).join(', ')}.`:''}</div>`:'';
+  if(ch){
+    const tk=IDX.tickers.find(x=>x.ticker===ch.ticker);const alt=tk?.bestBySize?.[ch.usd];
+    $('#banner').innerHTML=`<div class="banner"><div class="big">$${ch.usd.toLocaleString()} of ${esc(ch.ticker)}, same token (${esc(ch.symbol)}), same moment:</div>
+    <div class="chan"><div><span>Binance Web3 API "best" route</span><b class="bad">${val(ch.usd,ch.apiCostPct)}</b><em>of stock (${pct0(ch.apiCostPct)} over fair)</em></div>
+    <div><span>Binance Agentic Wallet</span><b class="good">${val(ch.usd,ch.walletCostPct)}</b><em>of stock (${pct(ch.walletCostPct)})</em></div>
+    ${alt&&alt.symbol!==ch.symbol?`<div><span>Mizan route: ${esc(alt.symbol)} via API</span><b class="good">${val(ch.usd,alt.c)}</b><em>of stock (${pct(alt.c)})</em></div>`:''}</div>
+    <div class="note">Two Binance routing channels quote the same trade ${pct0(ch.gap)} apart. Mizan measures both, and every issuer, every 5–15 minutes, and only buys where the price is fair.${t?` Persistent API trap: ${esc(t.symbol)} @ ${fmtUsd(t.size)} typ. ${pct0(t.median)} (${t.trapped}/${t.n} snapshots).`:''}</div></div>`;
+  } else {
+    $('#banner').innerHTML=t?`<div class="banner"><div class="big">Trap: a ${fmtUsd(t.size)} buy of <b>${esc(t.symbol)}</b> through the Web3 API's "best" route typically costs <b>${pct0(t.median)}</b> over fair value.</div>
+    It happened in ${t.trapped} of ${t.n} snapshots (${Math.round(t.rate*100)}%). The same stock via another issuer stays within 0.5%.</div>`:'';
+  }
   $('#sizes').innerHTML=IDX.sizes.map(s=>`<button data-s="${s}" class="${s===SIZE?'on':''}">${fmtUsd(s)}</button>`).join('');
   render();
 }
 function render(){
-  const list=IDX.tickers.filter(t=>!HALAL||/SPUS|HLAL/.test(t.shariah));
+  const list=IDX.tickers.filter(t=>(!HALAL||/^SPUS/.test(t.shariah))&&(!Q||t.ticker.includes(Q))).sort((a,b)=>(a.tier==='core'?0:1)-(b.tier==='core'?0:1)||a.ticker.localeCompare(b.ticker));
   $('#list').innerHTML=list.map(t=>{
     const best=t.bestBySize[SIZE];
     const ws=['ondo','bstocks','xstocks'].map(k=>{
@@ -94,10 +110,11 @@ function render(){
       if(!w)return `<div class="w na"><div class="s"><span>${WNAME[k]}</span></div><div class="v">not issued</div></div>`;
       const q=w.quotes?.[SIZE];const c=q?.costVsFairPct;
       const v=c!=null?(c>1000?'no real liquidity':pct(c)):q?.err?'no liquidity':'–';
-      return `<div class="w ${cls(c)}"><div class="s"><span>${esc(w.symbol||WNAME[k])}</span><span>${q?.mode??''}</span></div><div class="v">${v}</div></div>`;
+      const wq=w.wallet?.[SIZE];
+      return `<div class="w ${cls(c)}"><div class="s"><span>${esc(w.symbol||WNAME[k])}</span><span>${q?.mode?'API':''}</span></div><div class="v">${v}</div>${wq?`<div class="wal">Agentic Wallet: <b>${pct(wq.costVsFairPct)}</b></div>`:''}</div>`;
     }).join('');
     const flags=t.wrappers.flatMap(w=>w.flags.map(f=>`<span class="flag ${f.k}">${esc(w.symbol)}: ${esc(f.txt)}</span>`)).join('');
-    const halalTxt=/SPUS|HLAL/.test(t.shariah)?`<span class="sh ok">✓ Shariah (${esc(t.shariah)})</span>`:`<span class="sh">${esc(t.shariah)}</span>`;
+    const halalTxt=/^SPUS/.test(t.shariah)?`<span class="sh ok">✓ Shariah (${esc(t.shariah)})</span>`:`<span class="sh">${esc(t.shariah)}</span>`;
     return `<div class="row ${OPEN.has(t.ticker)?'open':''}" data-t="${t.ticker}">
       <div><div class="tk">${t.ticker}</div>${halalTxt}</div>
       <div class="ws">${ws}</div>
@@ -124,6 +141,7 @@ document.addEventListener('click',e=>{
   const r=e.target.closest('.row');if(r){const t=r.dataset.t;OPEN.has(t)?OPEN.delete(t):OPEN.add(t);r.classList.toggle('open');if(OPEN.has(t))chart(t)}
 });
 $('#halal').addEventListener('change',e=>{HALAL=e.target.checked;render()});
+$('#q').addEventListener('input',e=>{Q=e.target.value.trim().toUpperCase();render()});
 load();setInterval(load,60000);
 </script>
 </body>

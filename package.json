@@ -8,9 +8,12 @@
     "node": ">=20"
   },
   "scripts": {
-    "probe": "node scripts/probe.mjs"
+    "probe": "node scripts/probe.mjs",
+    "collect": "node scripts/collect.mjs",
+    "wallet-sampler": "node scripts/wallet-sampler.mjs",
+    "serve": "node scripts/server.mjs"
   },
   "dependencies": {
-    "@binance/agentic-wallet": "^1.10.0"
+    "@binance/agentic-wallet": "1.10.0"
   }
 }
