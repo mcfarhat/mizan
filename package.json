@@ -4,8 +4,13 @@
   "private": true,
   "type": "module",
   "description": "Mizan: tokenized-stock integrity index + Shariah-screened basket agent on BNB Chain",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "probe": "node scripts/probe.mjs"
+  },
+  "dependencies": {
+    "@binance/agentic-wallet": "^1.10.0"
   }
 }
