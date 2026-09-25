@@ -71,11 +71,16 @@ export function buildIndex(rows, cfg) {
   const persist = {};
   for (const r of rows) for (const u of SIZES) {
     const q = r.quotes?.[u]; if (!q || q.costVsFairPct == null) continue;
-    const k = `${r.symbol}@${u}`; const p = (persist[k] ||= { symbol: r.symbol, size: u, n: 0, trapped: 0, worst: 0 });
-    p.n++; if (q.costVsFairPct > TRAP_PCT && (q.reportedImpactPct ?? 0) < TRAP_IMPACT) p.trapped++;
+    const k = `${r.symbol}@${u}`; const p = (persist[k] ||= { symbol: r.symbol, size: u, n: 0, trapped: 0, worst: 0, costs: [] });
+    p.n++; if (q.costVsFairPct > TRAP_PCT && (q.reportedImpactPct ?? 0) < TRAP_IMPACT) { p.trapped++; p.costs.push(q.costVsFairPct); }
     p.worst = Math.max(p.worst, q.costVsFairPct);
   }
-  const traps = Object.values(persist).filter(p => p.trapped).sort((a, b) => b.worst - a.worst);
+  // Rank by persistence first (share of snapshots trapped), then by typical (median) cost.
+  // Costs > 1000% mean the pool ran dry at that size ("exhausted") - reported, but never used as a headline number.
+  const med = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null; };
+  const traps = Object.values(persist).filter(p => p.trapped).map(({ costs, ...p }) => {
+    const m = med(costs); return { ...p, rate: p.trapped / p.n, median: m, exhausted: m > 1000 };
+  }).sort((a, b) => (b.rate - a.rate) || ((a.exhausted - b.exhausted)) || (b.median - a.median));
   const snapshots = new Set(rows.map(r => r.at.slice(0, 16))).size;
   return { generatedAt: new Date().toISOString(), sizes: SIZES, safePct: SAFE_PCT, trapPct: TRAP_PCT, window: { from: rows[0]?.at, to: rows.at(-1)?.at, rows: rows.length, passes: snapshots }, traps, tickers };
 }

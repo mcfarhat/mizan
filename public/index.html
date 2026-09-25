@@ -77,9 +77,11 @@ async function load(){
   IDX=await (await fetch('/api/index')).json();
   const w=IDX.window;
   $('#meta').textContent=`${IDX.tickers.length} stocks × 3 issuers · ${w.passes} snapshots since ${new Date(w.from).toUTCString().slice(5,22)} UTC · US session: ${IDX.tickers[0]?.session??'?'} · updated ${new Date(IDX.generatedAt).toLocaleTimeString()}`;
-  const t=IDX.traps[0];
-  $('#banner').innerHTML=t?`<div class="banner"><div class="big">Trap: a ${fmtUsd(t.size)} buy of <b>${esc(t.symbol)}</b> through the aggregator's "best" route costs up to <b>+${t.worst.toFixed(0)}%</b> over fair value.</div>
-    It happened in ${t.trapped} of ${t.n} snapshots, and every time the API reported under 1% price impact. ${IDX.traps.length>1?`Also: ${IDX.traps.slice(1,3).map(x=>`${esc(x.symbol)} @ ${fmtUsd(x.size)} (up to +${x.worst.toFixed(0)}%, ${x.trapped}/${x.n})`).join(', ')}.`:''}</div>`:'';
+  const pct0=x=>x>1000?'>1000%':'+'+x.toFixed(0)+'%';
+  const head=IDX.traps.filter(x=>x.rate>=0.5&&!x.exhausted);
+  const t=head[0];
+  $('#banner').innerHTML=t?`<div class="banner"><div class="big">Trap: a ${fmtUsd(t.size)} buy of <b>${esc(t.symbol)}</b> through the aggregator's "best" route typically costs <b>${pct0(t.median)}</b> over fair value.</div>
+    It happened in ${t.trapped} of ${t.n} snapshots (${Math.round(t.rate*100)}%), each time with the API reporting under 1% price impact.${head.length>1?` Also: ${head.slice(1,4).map(x=>`${esc(x.symbol)} @ ${fmtUsd(x.size)} (typ. ${pct0(x.median)}, ${x.trapped}/${x.n})`).join(', ')}.`:''}</div>`:'';
   $('#sizes').innerHTML=IDX.sizes.map(s=>`<button data-s="${s}" class="${s===SIZE?'on':''}">${fmtUsd(s)}</button>`).join('');
   render();
 }

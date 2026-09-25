@@ -9,7 +9,7 @@ set /p SERVER_IP=<"%IPFILE%"
 if "%MIZAN_DOMAIN%"=="" set /p MIZAN_DOMAIN=<deploy\domain.txt
 if "%MIZAN_DOMAIN%"=="" (echo [ERROR] put the domain in deploy\domain.txt & pause & exit /b 1)
 echo == Deploying Mizan to %SERVER_IP% as %MIZAN_DOMAIN% ==
-git add -A && git commit -q -m "deploy" 2>nul
+git add -A 2>nul && git commit -q -m "deploy" >nul 2>nul
 git archive --format=tar.gz -o "%TEMP%\mizan.tgz" HEAD || goto fail
 scp %SSHOPTS% "%TEMP%\mizan.tgz" deploy\server-setup.sh root@%SERVER_IP%:/root/ || goto fail
 ssh %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/.env" && goto skip_env
