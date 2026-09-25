@@ -1,0 +1,115 @@
+{
+  "_note": "Preset baskets. Only tickers screened Shariah-compliant (held by both SPUS and HLAL) are allowed unless a basket sets allowUnscreened.",
+  "presets": {
+    "halal-ai": {
+      "name": "Halal AI & Chips",
+      "desc": "AI compute, cloud and models",
+      "weights": {
+        "NVDA": 40,
+        "MSFT": 30,
+        "GOOGL": 30
+      },
+      "aliases": [
+        "halal ai",
+        "ai basket",
+        "ai and chips",
+        "ai & chips"
+      ]
+    },
+    "halal-bigtech": {
+      "name": "Halal Big Tech",
+      "desc": "Large, liquid, screened US tech",
+      "weights": {
+        "AAPL": 25,
+        "MSFT": 25,
+        "GOOGL": 25,
+        "NVDA": 25
+      },
+      "aliases": [
+        "big tech",
+        "bigtech"
+      ]
+    },
+    "halal-core": {
+      "name": "Halal Core 5",
+      "desc": "Equal-weight all five screened names we index",
+      "weights": {
+        "NVDA": 20,
+        "AAPL": 20,
+        "MSFT": 20,
+        "GOOGL": 20,
+        "TSLA": 20
+      },
+      "aliases": [
+        "core",
+        "everything",
+        "diversified",
+        "broad",
+        "all five"
+      ]
+    }
+  },
+  "themes": {
+    "NVDA": [
+      "ai",
+      "chip",
+      "chips",
+      "semi",
+      "semis",
+      "semiconductor",
+      "gpu",
+      "nvidia",
+      "compute"
+    ],
+    "MSFT": [
+      "ai",
+      "cloud",
+      "software",
+      "microsoft",
+      "azure",
+      "enterprise"
+    ],
+    "GOOGL": [
+      "ai",
+      "search",
+      "google",
+      "alphabet",
+      "ads",
+      "cloud",
+      "youtube"
+    ],
+    "AAPL": [
+      "apple",
+      "iphone",
+      "phone",
+      "consumer",
+      "hardware",
+      "devices"
+    ],
+    "TSLA": [
+      "ev",
+      "evs",
+      "electric",
+      "car",
+      "cars",
+      "tesla",
+      "auto",
+      "energy",
+      "robotaxi"
+    ],
+    "META": [
+      "social",
+      "meta",
+      "facebook",
+      "instagram",
+      "vr"
+    ],
+    "AMZN": [
+      "amazon",
+      "ecommerce",
+      "e-commerce",
+      "retail",
+      "aws"
+    ]
+  }
+}

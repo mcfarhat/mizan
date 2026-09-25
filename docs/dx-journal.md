@@ -64,3 +64,6 @@ Sections the report must cover: onboarding time · doc issues (page + location) 
 - `market-order list --orderId <id>` returns `{"total":0,"list":[]}` for the exact orderId that `swap` just returned, while the unfiltered list shows it FINISHED. **The ID filter doesn't work.**
 - The market-order record has status and txHash but **no filled amount**. You have to diff wallet balances or decode the tx to learn what you actually got. For an agent that verifies its own fills, this is the most important missing field.
 - `swap` returns only `{orderId}`, with no txHash, no expected output and no status. The agent has to poll a different endpoint, and that endpoint's filter is broken (above).
+
+## 2026-09-25 · first basket run
+- 16:11 · `baw market-order quote` for **$2.40 NVDAon and $1.80 MSFTon** failed with `315008 SERVICE_ERROR "From token value greater than 5 USD"`, while $1.80 GOOGLB (bStocks) quoted and filled fine (realized +0.056% vs fair). So **Ondo tokens have a $5 minimum order via the Agentic Wallet**, and the error message states the rule **backwards**: the value was *less* than $5. Nothing in the docs mentions a per-issuer minimum. The executor now skips Ondo under $5 and falls back to the next-fairest wrapper.

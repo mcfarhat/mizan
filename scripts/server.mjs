@@ -35,4 +35,4 @@ createServer((req, res) => {
     if (existsSync(f)) { res.writeHead(200, { 'Content-Type': MIME[extname(f)] || 'application/octet-stream' }); return res.end(readFileSync(f)); }
     json(res, { error: 'not found' }, 404);
   } catch (e) { json(res, { error: e.message }, 500); }
-}).listen(PORT, () => console.log(`Mizan dashboard: http://localhost:${PORT}`));
+}).listen(PORT, process.env.HOST || '0.0.0.0', () => console.log(`Mizan dashboard: http://${process.env.HOST || 'localhost'}:${PORT}`));
