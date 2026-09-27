@@ -15,7 +15,8 @@ git archive --format=tar.gz -o "%TEMP%\mizan.tgz" HEAD || goto fail
 
 REM 1) one check: what does the server already have?
 set HAS_OK=& set HAS_ENV=& set HAS_TRADES=& set HAS_PLANS=
-for /f %%a in ('ssh -n %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/.env && echo ENV; test -f /opt/mizan/data/trades.jsonl && echo TRADES; test -f /opt/mizan/data/plans.json && echo PLANS; mkdir -p /root/mizan-data; echo OK"') do set HAS_%%a=1
+ssh -n %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/.env && echo ENV; test -f /opt/mizan/data/trades.jsonl && echo TRADES; test -f /opt/mizan/data/plans.json && echo PLANS; mkdir -p /root/mizan-data; echo OK" > "%TEMP%\mizan-state.txt"
+for /f %%a in ('type "%TEMP%\mizan-state.txt"') do set HAS_%%a=1
 if not defined HAS_OK (echo [ERROR] could not reach the server to check its state - nothing uploaded & goto fail)
 
 REM 2) one upload with everything that's needed
