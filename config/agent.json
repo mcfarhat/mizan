@@ -4,6 +4,23 @@
   "endpoint": "https://mizan.greateck.com/erc8183",
   "negotiate": "https://mizan.greateck.com/erc8183/negotiate",
   "task": "<TICKER> <USD>  e.g. \"GOOGL 10000\"",
-  "mainnet": { "registry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432", "agentId": 359180, "tx": "0xf3ce4366ca55a518982fa4cdadcaf47afc1465bfd7503a1521bfa52bd8a8bc9f" },
-  "testnet": { "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e", "agentId": 2503, "tx": "0xdf726a36fb1ae3fb0b22d9e5b1b8952cd4d84bb944d535a0a63610327d1ea3cf" }
+  "mainnet": {
+    "registry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    "agentId": 359180,
+    "tx": "0xf3ce4366ca55a518982fa4cdadcaf47afc1465bfd7503a1521bfa52bd8a8bc9f"
+  },
+  "testnet": {
+    "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "agentId": 2503,
+    "tx": "0xdf726a36fb1ae3fb0b22d9e5b1b8952cd4d84bb944d535a0a63610327d1ea3cf",
+    "firstHire": {
+      "jobId": 1362,
+      "task": "GOOGL 10000",
+      "escrow": "1 U",
+      "createJob": "0x464ef1e4ffdb1bab8a4ab2ee9655cfb01c72bb1b7ee4cca48c3f6ad1e99fbf85",
+      "fund": "0xbb3e0a42682cab0e769544c2b6ea7ba4a7dfe5a503ef8694b3e55410244de2da",
+      "deliverableHash": "0xbef8aa3d8ec2269cf5188a8ba8088079ffac21ab5e90bb5e98550171aedf82a9",
+      "submittedAfterSec": 31
+    }
+  }
 }
