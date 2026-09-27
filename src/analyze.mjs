@@ -35,7 +35,8 @@ export function loadWallet(hours = 6) {
 export function safeSize(r) {
   if (r.quotes?.[SIZES[0]]?.costVsFairPct == null) return null;
   let safe = 0;
-  for (const u of SIZES) { const c = r.quotes?.[u]?.costVsFairPct; if (c == null) { if (r.quotes?.[u]) break; else continue; } if (c <= SAFE_PCT) safe = u; else break; }
+  // largest size within SAFE_PCT; a miss at the smallest sizes (fixed fees weigh more on tiny orders) doesn't end the scan
+  for (const u of SIZES) { const c = r.quotes?.[u]?.costVsFairPct; if (c == null) { if (r.quotes?.[u]) break; else continue; } if (c <= SAFE_PCT) safe = u; else if (safe) break; }
   return safe;
 }
 function flags(r) {

@@ -59,7 +59,7 @@ export async function snapshotTicker(ticker, addrs, { session, marketPrices } = 
       }
     }
         // safe size = largest contiguous ladder size within SAFE_PCT (stop at first breach)
-    let safe = 0; for (const u of sizes) { const c = row.quotes[u]?.costVsFairPct; if (c != null && c <= SAFE_PCT) safe = u; else break; }
+    let safe = 0; for (const u of sizes) { const c = row.quotes[u]?.costVsFairPct; if (c != null && c <= SAFE_PCT) safe = u; else if (safe || c == null) break; }   // small-size misses (fixed fees) don't end the scan
     row.safeSizeUsd = row.quotes[sizes[0]]?.costVsFairPct == null ? null : safe;
     row.tier = addrs.tier || 'core';
     rows.push(row);

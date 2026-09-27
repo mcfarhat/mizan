@@ -86,7 +86,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
     <label class="tg" title="Hide stocks where no issuer can be bought at this size"><input type="checkbox" id="hidestk"> Hide stocks with no route</label>
     <select id="sort" title="Sort stocks" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)">
       <option value="name">Sort: core first, A–Z</option><option value="az">Sort: A–Z</option>
-      <option value="best">Sort: cheapest route first</option><option value="trap">Sort: biggest trap first</option>
+      <option value="best">Sort: biggest discount to fair first</option><option value="trap">Sort: biggest trap first</option>
       <option value="gap">Sort: biggest issuer spread</option><option value="wallet">Sort: largest API vs Wallet gap</option>
       <option value="safe">Sort: largest safe size</option></select>
     <input id="q" placeholder="Search ticker…" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:150px">
@@ -104,7 +104,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
   </section>
   <footer>
     Fair price = underlying stock price × the token's shares multiplier (each issuer reinvests dividends differently).
-    Real cost = what the Binance Web3 API aggregator's <i>best</i> quote actually delivers, vs fair; "Agentic Wallet" = the same buy quoted by Binance's Agentic Wallet (sampled every 15 min, $1k and $10k). Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.
+    Real cost = what the Binance Web3 API aggregator's <i>best</i> quote actually delivers, vs fair; "Agentic Wallet" = the same buy quoted by Binance's Agentic Wallet (sampled every 15 min, $1k and $10k). Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%. A negative cost means the token is quoted below fair (a discount vs the last underlying price). When the US market is closed, the reference is the last close, so a weekend discount often reflects expected price moves, not free money. Realizing it also means selling back on-chain, where the same spread applies.
     Data refreshes every 5 min · API: <code>/api/index</code> · <code>/api/check/NVDA?usd=5000</code> · <code>/api/heatmap</code> · <code>/health</code>
   </footer>
 </div>
@@ -176,7 +176,7 @@ function render(){
       <div><div class="tk">${t.ticker}</div>${halalTxt}</div>
       <div class="ws">${ws}</div>
       <div class="rec">${best?`Buy ${fmtUsd(SIZE)} via <b>${esc(best.symbol)}</b><br><span class="mute">real cost ${pct(best.c)} vs fair</span>`:'<span class="mute">no route</span>'}
-        ${t.recommend?.safeSizeUsd>0?`<br><span class="mute">safe up to ${fmtUsd(t.recommend.safeSizeUsd)} via ${esc(t.recommend.symbol)}</span>`:t.recommend?`<br><span class="mute">not within 0.5% of fair even at $100</span>`:''}</div>
+        ${t.recommend?.safeSizeUsd>0?`<br><span class="mute">safe up to ${fmtUsd(t.recommend.safeSizeUsd)} via ${esc(t.recommend.symbol)}</span>`:t.recommend?`<br><span class="mute">no size within 0.5% of fair</span>`:''}</div>
       <div class="detail"><div class="flags">${flags||'<span class="flag">no issues flagged</span>'}</div><div class="chartbox" id="c-${t.ticker}">loading history…</div></div>
     </div>`}).join('');
   for(const t of OPEN)chart(t);
