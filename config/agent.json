@@ -20,7 +20,10 @@
       "createJob": "0x464ef1e4ffdb1bab8a4ab2ee9655cfb01c72bb1b7ee4cca48c3f6ad1e99fbf85",
       "fund": "0xbb3e0a42682cab0e769544c2b6ea7ba4a7dfe5a503ef8694b3e55410244de2da",
       "deliverableHash": "0xbef8aa3d8ec2269cf5188a8ba8088079ffac21ab5e90bb5e98550171aedf82a9",
-      "submittedAfterSec": 31
+      "submittedAfterSec": 31,
+      "settle": "0x05df16419c7a3d973d75de51ebf9929186f734cf00e0f6df642540d1a33e72dc",
+      "status": "COMPLETED"
     }
-  }
+  },
+  "providerWallet": "0xeC826634F755cAfa1c4fb6603a46560B6D50D63B"
 }

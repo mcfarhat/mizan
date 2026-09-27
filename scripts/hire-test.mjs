@@ -97,8 +97,21 @@ async function ensureFunds(budget) {
 const cmd = process.argv[2] || 'hire';
 if (cmd === 'status' || cmd === 'settle') {
   const id = process.argv[3]; if (!id) { console.log(`usage: ${cmd} <jobId>`); process.exit(1); }
-  if (cmd === 'settle') await send('settle', buyer, { address: A.router, abi: ABI.router, functionName: 'settle', args: [BigInt(id), '0x'] });
-  const j = await getJob(id);
+  let j = await getJob(id);
+  const win = Number(await pub.readContract({ address: A.policy, abi: ABI.policy, functionName: 'disputeWindow' }));
+  const subAt = Number(await pub.readContract({ address: A.policy, abi: ABI.policy, functionName: 'submittedAt', args: [BigInt(id)] }));
+  const readyAt = subAt + win, now = () => Math.floor(Date.now() / 1000);
+  if (subAt) console.log(`submitted ${new Date(subAt * 1000).toISOString()}  dispute window ${win / 60} min  settle-able from ${new Date(readyAt * 1000).toISOString()}`);
+  if (cmd === 'settle' && j.status === 'SUBMITTED') {
+    if (now() < readyAt) {
+      const wait = readyAt - now() + 20;
+      if (wait > 45 * 60) { console.log(`Too early: ${Math.ceil(wait / 60)} min left. Run this again after ${new Date(readyAt * 1000).toLocaleString()}.`); process.exit(1); }
+      console.log(`Dispute window still open: waiting ${Math.ceil(wait / 60)} min, then settling automatically (leave this window open)...`);
+      await new Promise(r => setTimeout(r, wait * 1000));
+    }
+    await send('settle', buyer, { address: A.router, abi: ABI.router, functionName: 'settle', args: [BigInt(id), '0x'] });
+    j = await getJob(id);
+  } else if (cmd === 'settle') console.log(`nothing to settle: job is ${j.status}`);
   console.log(`job ${id}: ${j.status}  provider ${j.provider}  budget ${formatUnits(j.budget, 18)} $U`);
   process.exit(0);
 }
