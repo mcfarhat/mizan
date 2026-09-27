@@ -23,6 +23,7 @@ if [ -d /root/mizan-data ]; then            # first deploy: seed collected histo
 fi
 [ -f /root/mizan-trades.jsonl ] && { [ -f $APP_DIR/data/trades.jsonl ] || mv /root/mizan-trades.jsonl $APP_DIR/data/trades.jsonl; }
 [ -f /root/mizan-plans.json ] && { [ -f $APP_DIR/data/plans.json ] || mv /root/mizan-plans.json $APP_DIR/data/plans.json; }
+rm -f /root/mizan-trades.jsonl /root/mizan-plans.json   # leftovers when the server already had its own copy
 chown -R $APP_USER:$APP_USER $APP_DIR
 sudo -u $APP_USER -H bash -c "cd $APP_DIR && npm install --omit=dev --no-audit --no-fund --loglevel=error" || echo "!! npm install failed (wallet sampler will stay idle)"
 
@@ -157,7 +158,7 @@ else
   echo "!! public HTTPS check returned '$PUB' - check the DNS A record for $DOMAIN points to this server, and Caddy logs (journalctl -u caddy -n 30)"
 fi
 if systemctl is-enabled mizan-router >/dev/null 2>&1; then
-  RT=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "https://$DOMAIN/erc8183/" || true)
-  echo "-- agent router via https://$DOMAIN/erc8183: HTTP $RT"
+  RT=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "https://$DOMAIN/erc8183/status" || true)
+  echo "-- agent router (https://$DOMAIN/erc8183/status): HTTP $RT"
 fi
 echo "== Done: https://$DOMAIN =="
