@@ -1,0 +1,9 @@
+{
+  "name": "Mizan best-execution agent",
+  "standard": "ERC-8004 identity + ERC-8183 jobs (BNB Agent Studio)",
+  "endpoint": "https://mizan.greateck.com/erc8183",
+  "negotiate": "https://mizan.greateck.com/erc8183/negotiate",
+  "task": "<TICKER> <USD>  e.g. \"GOOGL 10000\"",
+  "mainnet": { "registry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432", "agentId": 359180, "tx": "0xf3ce4366ca55a518982fa4cdadcaf47afc1465bfd7503a1521bfa52bd8a8bc9f" },
+  "testnet": { "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e", "agentId": 2503, "tx": "0xdf726a36fb1ae3fb0b22d9e5b1b8952cd4d84bb944d535a0a63610327d1ea3cf" }
+}

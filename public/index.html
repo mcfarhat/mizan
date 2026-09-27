@@ -46,6 +46,7 @@ label.tg{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:po
 svg.chart{width:100%;height:120px}
 .legend{font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px}
+.hire{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}.hire h2{font-size:17px;margin:0 0 6px}.hire p{margin:6px 0;font-size:14px}.hire .ids{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.hire .ids a{background:var(--chip);border-radius:9px;padding:6px 10px;color:var(--ink);text-decoration:none;font-size:13px}.hire .ids a b{color:var(--accent)}
 footer{margin-top:28px;color:var(--mute);font-size:13px}
 code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
 @media (max-width:760px){.row{grid-template-columns:1fr}.ws{grid-template-columns:1fr 1fr 1fr}}
@@ -62,6 +63,15 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
     <input id="q" placeholder="Search ticker…" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:150px">
   </div>
   <div class="grid" id="list"></div>
+  <section class="hire" id="hire">
+    <h2>Hire this agent</h2>
+    <p>Mizan is registered on BNB Chain as an on-chain agent (ERC-8004 identity) and takes jobs through BNB Agent Studio (ERC-8183). Send it a task like <code>GOOGL 10000</code> and it returns a best-execution report: the cost of every issuer's token on both Binance channels (Web3 API and Agentic Wallet), the fairest route, and which ones to avoid.</p>
+    <div class="ids">
+      <a href="https://bscscan.com/tx/0xf3ce4366ca55a518982fa4cdadcaf47afc1465bfd7503a1521bfa52bd8a8bc9f" target="_blank" rel="noopener">BSC mainnet · agentId <b>359180</b></a>
+      <a href="https://testnet.bscscan.com/tx/0xdf726a36fb1ae3fb0b22d9e5b1b8952cd4d84bb944d535a0a63610327d1ea3cf" target="_blank" rel="noopener">BSC testnet · agentId <b>2503</b></a>
+    </div>
+    <p class="tag">Job endpoint: <code>https://mizan.greateck.com/erc8183</code> · Free direct route check: <code>/api/route/GOOGL?usd=10000</code></p>
+  </section>
   <footer>
     Fair price = underlying stock price × the token's shares multiplier (each issuer reinvests dividends differently).
     Real cost = what the Binance Web3 API aggregator's <i>best</i> quote actually delivers, vs fair; "Agentic Wallet" = the same buy quoted by Binance's Agentic Wallet (sampled every 15 min, $1k and $10k). Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.

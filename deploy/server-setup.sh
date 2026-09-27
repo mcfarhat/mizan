@@ -135,4 +135,14 @@ fi
 sleep 3
 systemctl is-active mizan-web mizan-collect mizan-wallet mizan-agent mizan-router agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (web collect wallet agent router | agentcensus caddy): /'
 curl -s -o /dev/null -w "-- local dashboard: HTTP %{http_code}\n" http://127.0.0.1:8090/
-echo "== Done: https://$DOMAIN (HTTPS once DNS A record -> this server) =="
+PUB=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "https://$DOMAIN/" || true)
+if [ "$PUB" = "200" ]; then
+  echo "-- public HTTPS: OK (https://$DOMAIN -> 200)"
+else
+  echo "!! public HTTPS check returned '$PUB' - check the DNS A record for $DOMAIN points to this server, and Caddy logs (journalctl -u caddy -n 30)"
+fi
+if systemctl is-enabled mizan-router >/dev/null 2>&1; then
+  RT=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "https://$DOMAIN/erc8183/" || true)
+  echo "-- agent router via https://$DOMAIN/erc8183: HTTP $RT"
+fi
+echo "== Done: https://$DOMAIN =="

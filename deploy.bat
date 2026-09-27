@@ -23,7 +23,7 @@ ssh %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/data/trades.jsonl" || (if exi
 ssh %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/data/plans.json" || (if exist data\plans.json scp %SSHOPTS% data\plans.json root@%SERVER_IP%:/root/mizan-plans.json)
 ssh %SSHOPTS% root@%SERVER_IP% "DOMAIN=%MIZAN_DOMAIN% bash /root/server-setup.sh" || goto fail
 echo.
-echo Live (once DNS points to %SERVER_IP%): https://%MIZAN_DOMAIN%
+echo Deployed: https://%MIZAN_DOMAIN%
 pause
 exit /b 0
 :fail
