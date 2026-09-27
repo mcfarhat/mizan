@@ -1,7 +1,28 @@
-node_modules/
+# --- secrets: never commit ---
 .env
+.env.*
+!.env.example
+*.env
+!env-template.txt
+agent-studio/.env
+data/buyer.env
+*.pem
+*.key
+*keystore*
+*.secret
+secrets/
+agent-studio/.storage/
+
+# --- local data and output ---
 data/
 probe-output/
-agent-studio/.env
+*.log
+
+# --- dependencies and build junk ---
+node_modules/
 agent-studio/venv/
-agent-studio/.storage/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

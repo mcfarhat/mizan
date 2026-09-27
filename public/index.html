@@ -84,6 +84,11 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
     <label class="tg"><input type="checkbox" id="halal"> Shariah-screened only</label>
     <label class="tg" title="Hide issuer tokens that can't be bought at this size"><input type="checkbox" id="hidetok"> Hide tokens without liquidity</label>
     <label class="tg" title="Hide stocks where no issuer can be bought at this size"><input type="checkbox" id="hidestk"> Hide stocks with no route</label>
+    <select id="sort" title="Sort stocks" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)">
+      <option value="name">Sort: core first, A–Z</option><option value="az">Sort: A–Z</option>
+      <option value="best">Sort: cheapest route first</option><option value="trap">Sort: biggest trap first</option>
+      <option value="gap">Sort: biggest issuer spread</option><option value="wallet">Sort: largest API vs Wallet gap</option>
+      <option value="safe">Sort: largest safe size</option></select>
     <input id="q" placeholder="Search ticker…" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:150px">
   </div>
   <div class="grid" id="list"></div>
@@ -105,7 +110,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
 </div>
 <script>
 const $=s=>document.querySelector(s);
-let IDX=null,SIZE=1000,HALAL=false,Q='',OPEN=new Set(),HIDETOK=false,HIDESTK=false;
+let IDX=null,SIZE=1000,HALAL=false,Q='',OPEN=new Set(),HIDETOK=false,HIDESTK=false,SORT='name';
 const fmtUsd=u=>u>=1000?`$${u/1000}k`:`$${u}`;
 const pct=(x,d=2)=>x==null?'–':x>1000?'>1000%':(x>0?'+':'')+x.toFixed(d)+'%';
 const cls=c=>c==null?'na':c<=0.5?'good':c<=5?'warn':'bad';
@@ -137,8 +142,23 @@ async function load(){
   render();
 }
 const liquid=w=>{const c=w?.quotes?.[SIZE]?.costVsFairPct;return c!=null&&c<=1000||w?.wallet?.[SIZE]?.costVsFairPct!=null};
+const costs=t=>t.wrappers.map(w=>w.quotes?.[SIZE]?.costVsFairPct).filter(c=>c!=null);
+const walletGap=t=>Math.max(-Infinity,...t.wrappers.map(w=>{const a=w.quotes?.[SIZE]?.costVsFairPct,b=w.wallet?.[SIZE]?.costVsFairPct;return a!=null&&b!=null?a-b:-Infinity}));
+function sorter(){
+  const nm=(a,b)=>a.ticker.localeCompare(b.ticker), last=v=>v==null||!isFinite(v);
+  const by=(f,dir)=>(a,b)=>{const x=f(a),y=f(b);if(last(x)&&last(y))return nm(a,b);if(last(x))return 1;if(last(y))return -1;return dir*(x-y)||nm(a,b)};
+  switch(SORT){
+    case 'az':return nm;
+    case 'best':return by(t=>t.bestBySize[SIZE]?.c,1);
+    case 'trap':return by(t=>{const c=costs(t);return c.length?Math.max(...c):null},-1);
+    case 'gap':return by(t=>{const c=costs(t);return c.length>1?Math.max(...c)-Math.min(...c):null},-1);
+    case 'wallet':return by(walletGap,-1);
+    case 'safe':return by(t=>t.recommend?.safeSizeUsd,-1);
+    default:return (a,b)=>(a.tier==='core'?0:1)-(b.tier==='core'?0:1)||nm(a,b);
+  }
+}
 function render(){
-  const list=IDX.tickers.filter(t=>(!HALAL||/^SPUS/.test(t.shariah))&&(!Q||t.ticker.includes(Q))&&(!HIDESTK||t.wrappers.some(liquid))).sort((a,b)=>(a.tier==='core'?0:1)-(b.tier==='core'?0:1)||a.ticker.localeCompare(b.ticker));
+  const list=IDX.tickers.filter(t=>(!HALAL||/^SPUS/.test(t.shariah))&&(!Q||t.ticker.includes(Q))&&(!HIDESTK||t.wrappers.some(liquid))).sort(sorter());
   $('#list').innerHTML=list.map(t=>{
     const best=t.bestBySize[SIZE];
     const ws=['ondo','bstocks','xstocks'].map(k=>{
@@ -207,6 +227,7 @@ async function heat(){
   $('#hmb').innerHTML=`<p>Median real cost over fair (%) of a ${fmtUsd(h.size)} buy of the core stocks through the Web3 API, by hour (UTC), last ${h.days} days · ${h.samples.toLocaleString()} quotes. Outlined = US regular session (${esc(h.usSessionUtc)}). × = no liquidity. Hover a cell for detail.</p>${g}</div>`;
 }
 
+$('#sort').addEventListener('change',e=>{SORT=e.target.value;render()});
 $('#q').addEventListener('input',e=>{Q=e.target.value.trim().toUpperCase();render()});
 load().then(()=>{$('#tks').innerHTML=IDX.tickers.map(t=>`<option value="${t.ticker}">`).join('')});heat();setInterval(load,60000);
 </script>
