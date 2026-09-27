@@ -109,6 +109,19 @@ if [ "$ROUTER" = 1 ]; then systemctl enable mizan-router >/dev/null; systemctl r
 systemctl enable mizan-web mizan-collect mizan-wallet mizan-agent >/dev/null
 systemctl restart mizan-web mizan-collect mizan-wallet mizan-agent
 
+# Housekeeping: cap journald, compress old snapshot files (the dashboard reads the last ~8 days uncompressed), drop very old ones.
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nSystemMaxUse=300M\n' > /etc/systemd/journald.conf.d/mizan.conf
+systemctl restart systemd-journald || true
+cat > /etc/cron.daily/mizan-retention <<'CRON'
+#!/bin/sh
+# Mizan data retention: gzip snapshot/wallet files older than 14 days, delete archives older than 120 days.
+D=/opt/mizan/data
+find "$D" -maxdepth 1 \( -name 'snapshots-*.jsonl' -o -name 'wallet-*.jsonl' \) -mtime +14 -exec gzip -9 {} \;
+find "$D" -maxdepth 1 -name '*.jsonl.gz' -mtime +120 -delete
+CRON
+chmod 755 /etc/cron.daily/mizan-retention
+
 # 3. Caddy: own site file + import line (idempotent), validate before reload, roll back on failure
 mkdir -p /etc/caddy/sites.d
 cat > /etc/caddy/sites.d/mizan.caddy <<CADDY
@@ -135,6 +148,8 @@ fi
 sleep 3
 systemctl is-active mizan-web mizan-collect mizan-wallet mizan-agent mizan-router agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (web collect wallet agent router | agentcensus caddy): /'
 curl -s -o /dev/null -w "-- local dashboard: HTTP %{http_code}\n" http://127.0.0.1:8090/
+sleep 2; echo "-- health: $(curl -s -m 20 http://127.0.0.1:8090/health || echo unreachable)"
+echo "-- disk: $(df -h / | awk 'NR==2{print $3" used of "$2" ("$5")"}') · mizan data: $(du -sh /opt/mizan/data 2>/dev/null | cut -f1)"
 PUB=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "https://$DOMAIN/" || true)
 if [ "$PUB" = "200" ]; then
   echo "-- public HTTPS: OK (https://$DOMAIN -> 200)"

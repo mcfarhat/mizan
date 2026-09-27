@@ -25,7 +25,7 @@ label.tg{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:po
 .row:hover{border-color:var(--accent)}
 .tk{font-weight:700;font-size:17px}.sh{font-size:12px;color:var(--mute)}
 .sh.ok{color:var(--good)}
-.ws{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ws{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ws:empty::after{content:'no liquid token at this size';color:var(--mute);font-size:13px}
 .w{border-radius:9px;padding:7px 9px;background:var(--chip);min-width:0}
 .w .s{font-size:12px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
 .w .v{font-weight:650;font-variant-numeric:tabular-nums}
@@ -47,9 +47,22 @@ svg.chart{width:100%;height:120px}
 .legend{font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px}
 .hire{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}.hire h2{font-size:17px;margin:0 0 6px}.hire p{margin:6px 0;font-size:14px}.hire .ids{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.hire .ids a{background:var(--chip);border-radius:9px;padding:6px 10px;color:var(--ink);text-decoration:none;font-size:13px}.hire .ids a b{color:var(--accent)}
+.ck{margin:18px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.ck h2,.hm h2{font-size:17px;margin:0 0 8px}.ck form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ck input,.ck select{font:inherit;font-size:14px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.ck button{font:inherit;font-size:14px;padding:7px 14px;border-radius:9px;border:0;background:var(--accent);color:var(--card);font-weight:600;cursor:pointer}
+.ck .res{margin-top:12px}.ck .vd{font-size:16px;font-weight:600;padding:10px 12px;border-radius:10px}
+.ck .vd.go{background:var(--goodbg);color:var(--good)}.ck .vd.no{background:var(--badbg);color:var(--bad)}
+.ck table{border-collapse:collapse;margin-top:10px;font-size:13.5px;width:100%}.ck td,.ck th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}.ck th{color:var(--mute);font-weight:500}
+.ck td.n{font-variant-numeric:tabular-nums}.ck .cmd{margin-top:8px;font-size:12.5px;overflow-x:auto;white-space:nowrap}
+.hm{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.hm .grid24{display:grid;grid-template-columns:120px repeat(24,minmax(0,1fr));gap:2px;font-size:11px;margin-top:6px}
+.hm .grid24 div{height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.hm .lbl{justify-content:flex-start!important;color:var(--mute);font-size:11.5px;white-space:nowrap;overflow:hidden}.hm .hr{color:var(--mute);height:16px!important}
+.hm .us{outline:1px solid var(--accent);outline-offset:-1px}.hm p{font-size:13px;color:var(--mute);margin:6px 0}
 footer{margin-top:28px;color:var(--mute);font-size:13px}
 code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
-@media (max-width:760px){.row{grid-template-columns:1fr}.ws{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:760px){.hm .grid24{grid-template-columns:70px repeat(24,minmax(0,1fr));font-size:9px}.hm .grid24 div{height:20px}.row{grid-template-columns:1fr}.ws{grid-template-columns:1fr 1fr 1fr}}
 </style>
 </head>
 <body>
@@ -57,12 +70,24 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
   <header><h1>Mizan<span class="ar">ميزان</span></h1><span class="tag">What does a tokenized stock on BNB Chain <i>really</i> cost?</span></header>
   <div class="meta" id="meta">loading…</div>
   <div id="banner"></div>
+  <section class="ck" id="check">
+    <h2>Check my trade</h2>
+    <form id="ckf"><input id="ckt" list="tks" placeholder="Ticker, e.g. GOOGL" size="12" required autocomplete="off"><datalist id="tks"></datalist>
+      <span>$</span><input id="cku" type="number" min="1" step="any" value="1000" style="width:110px">
+      <select id="ckc"><option value="any">Any channel</option><option value="wallet">Agentic Wallet only</option><option value="api">Web3 API only</option></select>
+      <span class="tag">max cost</span><select id="ckm"><option>0.5</option><option selected>1</option><option>2</option><option>5</option></select><span class="tag">%</span>
+      <button>Check</button></form>
+    <div class="res" id="ckr"></div>
+  </section>
   <div class="controls">
     <span class="tag">Trade size</span><div class="seg" id="sizes"></div>
     <label class="tg"><input type="checkbox" id="halal"> Shariah-screened only</label>
+    <label class="tg" title="Hide issuer tokens that can't be bought at this size"><input type="checkbox" id="hidetok"> Hide tokens without liquidity</label>
+    <label class="tg" title="Hide stocks where no issuer can be bought at this size"><input type="checkbox" id="hidestk"> Hide stocks with no route</label>
     <input id="q" placeholder="Search ticker…" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:150px">
   </div>
   <div class="grid" id="list"></div>
+  <section class="hm" id="heat"><h2>When is it safe to buy? Cost by hour of day</h2><div id="hmb">loading…</div></section>
   <section class="hire" id="hire">
     <h2>Hire this agent</h2>
     <p>Mizan is registered on BNB Chain as an on-chain agent (ERC-8004 identity) and takes jobs through BNB Agent Studio (ERC-8183). Send it a task like <code>GOOGL 10000</code> and it returns a best-execution report: the cost of every issuer's token on both Binance channels (Web3 API and Agentic Wallet), the fairest route, and which ones to avoid.</p>
@@ -70,17 +95,17 @@ code{background:var(--chip);padding:1px 5px;border-radius:5px;font-size:12.5px}
       <a href="https://bscscan.com/tx/0xf3ce4366ca55a518982fa4cdadcaf47afc1465bfd7503a1521bfa52bd8a8bc9f" target="_blank" rel="noopener">BSC mainnet · agentId <b>359180</b></a>
       <a href="https://testnet.bscscan.com/tx/0xdf726a36fb1ae3fb0b22d9e5b1b8952cd4d84bb944d535a0a63610327d1ea3cf" target="_blank" rel="noopener">BSC testnet · agentId <b>2503</b></a>
     </div>
-    <p class="tag">Job endpoint: <code>https://mizan.greateck.com/erc8183</code> · Free direct route check: <code>/api/route/GOOGL?usd=10000</code></p>
+    <p class="tag">Job endpoint: <code>https://mizan.greateck.com/erc8183</code> · Free check API: <code>/api/check/GOOGL?usd=10000&amp;channel=wallet</code> · Agentic Wallet skill: <code>skills/mizan-fair-price</code> (install it into any Binance Agentic Wallet agent so it checks fair price before every tokenized-stock swap)</p>
   </section>
   <footer>
     Fair price = underlying stock price × the token's shares multiplier (each issuer reinvests dividends differently).
     Real cost = what the Binance Web3 API aggregator's <i>best</i> quote actually delivers, vs fair; "Agentic Wallet" = the same buy quoted by Binance's Agentic Wallet (sampled every 15 min, $1k and $10k). Green ≤ 0.5% · amber ≤ 5% · red &gt; 5%.
-    Data refreshes every 5 min · API: <code>/api/index</code> · <code>/api/route/NVDA?usd=5000</code>
+    Data refreshes every 5 min · API: <code>/api/index</code> · <code>/api/check/NVDA?usd=5000</code> · <code>/api/heatmap</code> · <code>/health</code>
   </footer>
 </div>
 <script>
 const $=s=>document.querySelector(s);
-let IDX=null,SIZE=1000,HALAL=false,Q='',OPEN=new Set();
+let IDX=null,SIZE=1000,HALAL=false,Q='',OPEN=new Set(),HIDETOK=false,HIDESTK=false;
 const fmtUsd=u=>u>=1000?`$${u/1000}k`:`$${u}`;
 const pct=(x,d=2)=>x==null?'–':x>1000?'>1000%':(x>0?'+':'')+x.toFixed(d)+'%';
 const cls=c=>c==null?'na':c<=0.5?'good':c<=5?'warn':'bad';
@@ -111,12 +136,14 @@ async function load(){
   $('#sizes').innerHTML=IDX.sizes.map(s=>`<button data-s="${s}" class="${s===SIZE?'on':''}">${fmtUsd(s)}</button>`).join('');
   render();
 }
+const liquid=w=>{const c=w?.quotes?.[SIZE]?.costVsFairPct;return c!=null&&c<=1000||w?.wallet?.[SIZE]?.costVsFairPct!=null};
 function render(){
-  const list=IDX.tickers.filter(t=>(!HALAL||/^SPUS/.test(t.shariah))&&(!Q||t.ticker.includes(Q))).sort((a,b)=>(a.tier==='core'?0:1)-(b.tier==='core'?0:1)||a.ticker.localeCompare(b.ticker));
+  const list=IDX.tickers.filter(t=>(!HALAL||/^SPUS/.test(t.shariah))&&(!Q||t.ticker.includes(Q))&&(!HIDESTK||t.wrappers.some(liquid))).sort((a,b)=>(a.tier==='core'?0:1)-(b.tier==='core'?0:1)||a.ticker.localeCompare(b.ticker));
   $('#list').innerHTML=list.map(t=>{
     const best=t.bestBySize[SIZE];
     const ws=['ondo','bstocks','xstocks'].map(k=>{
       const w=t.wrappers.find(x=>x.wrapper===k);
+      if(HIDETOK&&!liquid(w))return '';
       if(!w)return `<div class="w na"><div class="s"><span>${WNAME[k]}</span></div><div class="v">not issued</div></div>`;
       const q=w.quotes?.[SIZE];const c=q?.costVsFairPct;
       const v=c!=null?(c>1000?'no real liquidity':pct(c)):q?.err?'no liquidity':'–';
@@ -129,7 +156,7 @@ function render(){
       <div><div class="tk">${t.ticker}</div>${halalTxt}</div>
       <div class="ws">${ws}</div>
       <div class="rec">${best?`Buy ${fmtUsd(SIZE)} via <b>${esc(best.symbol)}</b><br><span class="mute">real cost ${pct(best.c)} vs fair</span>`:'<span class="mute">no route</span>'}
-        ${t.recommend?`<br><span class="mute">safe up to ${fmtUsd(t.recommend.safeSizeUsd)} via ${esc(t.recommend.symbol)}</span>`:''}</div>
+        ${t.recommend?.safeSizeUsd>0?`<br><span class="mute">safe up to ${fmtUsd(t.recommend.safeSizeUsd)} via ${esc(t.recommend.symbol)}</span>`:t.recommend?`<br><span class="mute">not within 0.5% of fair even at $100</span>`:''}</div>
       <div class="detail"><div class="flags">${flags||'<span class="flag">no issues flagged</span>'}</div><div class="chartbox" id="c-${t.ticker}">loading history…</div></div>
     </div>`}).join('');
   for(const t of OPEN)chart(t);
@@ -147,12 +174,41 @@ async function chart(tk){
   <svg class="chart" viewBox="0 0 600 120" preserveAspectRatio="none"><line x1="10" x2="590" y1="${Y(0.5)}" y2="${Y(0.5)}" stroke="currentColor" opacity=".25" stroke-dasharray="4 4"/>${paths}</svg>`;
 }
 document.addEventListener('click',e=>{
-  const b=e.target.closest('#sizes button');if(b){SIZE=+b.dataset.s;document.querySelectorAll('#sizes button').forEach(x=>x.classList.toggle('on',x===b));render();return}
+  const b=e.target.closest('#sizes button');if(b){SIZE=+b.dataset.s;document.querySelectorAll('#sizes button').forEach(x=>x.classList.toggle('on',x===b));render();heat();return}
   const r=e.target.closest('.row');if(r){const t=r.dataset.t;OPEN.has(t)?OPEN.delete(t):OPEN.add(t);r.classList.toggle('open');if(OPEN.has(t))chart(t)}
 });
 $('#halal').addEventListener('change',e=>{HALAL=e.target.checked;render()});
+$('#hidetok').addEventListener('change',e=>{HIDETOK=e.target.checked;render()});
+$('#hidestk').addEventListener('change',e=>{HIDESTK=e.target.checked;render()});
+const pp=x=>x==null?'–':x>1000?'>1000%':(x>0?'+':'')+x.toFixed(2)+'%';
+$('#ckf').addEventListener('submit',async e=>{
+  e.preventDefault();const t=$('#ckt').value.trim().toUpperCase(),usd=+$('#cku').value||1000;
+  $('#ckr').innerHTML='<span class="tag">checking…</span>';
+  const r=await (await fetch(`/api/check/${encodeURIComponent(t)}?usd=${usd}&maxCost=${$('#ckm').value}&channel=${$('#ckc').value}`)).json();
+  if(!r.ok){$('#ckr').innerHTML=`<div class="vd no">${esc(r.error||'error')}</div>`;return}
+  const rows=r.options.map(o=>`<tr><td><b>${esc(o.symbol)}</b> <span class="tag">${esc(WNAME[o.issuer]||o.issuer)}</span></td><td class="n ${cls(o.web3Api?.costVsFairPct)}">${o.web3Api?.noLiquidity?'no liquidity':o.web3Api?pp(o.web3Api.costVsFairPct)+(o.web3Api.measuredAtUsd!==usd?` <span class="tag">@${fmtUsd(o.web3Api.measuredAtUsd)}</span>`:''):'no route'}</td><td class="n">${o.agenticWallet?pp(o.agenticWallet.costVsFairPct)+(o.agenticWallet.measuredAtUsd!==usd?` <span class="tag">@${fmtUsd(o.agenticWallet.measuredAtUsd)}</span>`:''):'<span class="tag">not sampled</span>'}</td><td class="tag">${esc(o.flags.join('; '))}</td></tr>`).join('');
+  $('#ckr').innerHTML=`<div class="vd ${r.go?'go':'no'}">${r.go?'✓ ':'✕ '}${esc(r.verdict)}</div>
+   <table><tr><th>Token</th><th>Web3 API "best" route</th><th>Agentic Wallet</th><th>Flags</th></tr>${rows}</table>
+   ${r.walletCommand?`<div class="cmd">Agentic Wallet: <code>${esc(r.walletCommand)}</code></div>`:''}
+   <p class="tag">${/^SPUS/.test(r.shariah)?'✓ Shariah-screened ('+esc(r.shariah)+')':'Not Shariah-screened'} · API: <code>/api/check/${esc(t)}?usd=${usd}</code></p>`;
+});
+async function heat(){
+  const h=await (await fetch('/api/heatmap?size='+(SIZE>=10000?10000:1000))).json();
+  if(!h.samples){$('#hmb').innerHTML='<span class="tag">not enough data yet</span>';return}
+  const col=c=>c==null?'var(--chip)':c<=0.5?'var(--goodbg)':c<=5?'var(--warnbg)':'var(--badbg)';
+  const tx=c=>c==null?'':c>1000?'∞':c>=10?Math.round(c):c.toFixed(1);
+  const us=hr=>hr>=13&&hr<20;
+  let g='<div class="grid24"><div class="lbl">UTC hour</div>'+[...Array(24)].map((_,i)=>`<div class="hr">${i}</div>`).join('');
+  for(const w of ['ondo','bstocks','xstocks'])for(const d of ['weekday','weekend']){
+    const row=h.cells[w]?.[d];if(!row)continue;
+    g+=`<div class="lbl">${WNAME[w]} · ${d==='weekday'?'Mon–Fri':'Sat–Sun'}</div>`+[...Array(24)].map((_,i)=>{const c=row[i];const m=c?.median;const t=c?(m==null?'no liquidity':`median ${pp(m)} · ${Math.round((c.trapRate||0)*100)}% trapped · ${Math.round(c.noLiqRate*100)}% no liquidity · n=${c.n}`):'no data';
+      return `<div class="${us(i)&&d==='weekday'?'us':''}" style="background:${c&&m==null?'var(--badbg)':col(m)}" title="${WNAME[w]} ${d} ${i}:00 UTC: ${t}">${c?(m==null?'×':tx(m)):''}</div>`}).join('');
+  }
+  $('#hmb').innerHTML=`<p>Median real cost over fair (%) of a ${fmtUsd(h.size)} buy of the core stocks through the Web3 API, by hour (UTC), last ${h.days} days · ${h.samples.toLocaleString()} quotes. Outlined = US regular session (${esc(h.usSessionUtc)}). × = no liquidity. Hover a cell for detail.</p>${g}</div>`;
+}
+
 $('#q').addEventListener('input',e=>{Q=e.target.value.trim().toUpperCase();render()});
-load();setInterval(load,60000);
+load().then(()=>{$('#tks').innerHTML=IDX.tickers.map(t=>`<option value="${t.ticker}">`).join('')});heat();setInterval(load,60000);
 </script>
 </body>
 </html>

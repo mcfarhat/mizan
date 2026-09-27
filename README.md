@@ -203,7 +203,7 @@ Windows one-click wrappers (`*.bat`) are included for each step.
 
 ## Safety and limits
 
-- **Price guard:** every buy passes the fair-price guard (1% by default) and needs interactive confirmation unless it runs as a scheduled plan.
+- **Price guard:** every buy passes the fair-price guard (1% by default). Manual buys also ask for confirmation.
 - **Wallet limits:** the Agentic Wallet has a $1k daily limit and a limited token scope, and holds a small balance.
 - **Shariah screen:** this is a holdings-based proxy (SPUS membership). It is not a fatwa or a formal Shariah certification.
 - **Not financial advice.** Measurements are point-in-time quotes and can change within minutes.
