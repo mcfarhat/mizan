@@ -1,0 +1,5 @@
+bnbagent>=0.4.6
+fastapi
+uvicorn
+web3>=6.0
+python-dotenv

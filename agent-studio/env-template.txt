@@ -1,0 +1,19 @@
+# Mizan Best-Execution agent (ERC-8183 provider). Copy to agent-studio\.env and fill in. NEVER commit .env.
+# Use a NEW, dedicated wallet for this agent's on-chain identity (not the Agentic Wallet, not an AgentCensus key).
+# Create one with:  node scripts\new-agent-key.mjs   (writes PRIVATE_KEY + prints the address to fund)
+# Fund it with ~0.01 tBNB (testnet jobs) and ~0.002 BNB (mainnet ERC-8004 registration gas).
+
+WALLET_PASSWORD=
+PRIVATE_KEY=
+
+NETWORK=bsc-testnet
+RPC_URL=https://bsc-testnet-rpc.publicnode.com
+
+# Public URL (Caddy routes /erc8183* on mizan.greateck.com to port 8091; negotiate = ERC8183_AGENT_URL + /negotiate)
+ERC8183_AGENT_URL=https://mizan.greateck.com/erc8183
+ERC8183_SERVICE_PRICE=0
+
+PORT=8091
+AGENT_NAME=Mizan Best-Execution Router
+# Where the Mizan index API lives (same box)
+MIZAN_API=http://127.0.0.1:8090

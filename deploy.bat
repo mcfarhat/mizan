@@ -18,6 +18,7 @@ scp %SSHOPTS% .env root@%SERVER_IP%:/root/mizan.env || goto fail
 ssh %SSHOPTS% root@%SERVER_IP% "mkdir -p /root/mizan-data"
 scp %SSHOPTS% data\snapshots-*.jsonl root@%SERVER_IP%:/root/mizan-data/
 :skip_env
+if exist agent-studio\.env scp %SSHOPTS% agent-studio\.env root@%SERVER_IP%:/root/mizan-agent.env
 ssh %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/data/trades.jsonl" || (if exist data\trades.jsonl scp %SSHOPTS% data\trades.jsonl root@%SERVER_IP%:/root/mizan-trades.jsonl)
 ssh %SSHOPTS% root@%SERVER_IP% "test -f /opt/mizan/data/plans.json" || (if exist data\plans.json scp %SSHOPTS% data\plans.json root@%SERVER_IP%:/root/mizan-plans.json)
 ssh %SSHOPTS% root@%SERVER_IP% "DOMAIN=%MIZAN_DOMAIN% bash /root/server-setup.sh" || goto fail

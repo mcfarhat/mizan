@@ -26,6 +26,14 @@ fi
 chown -R $APP_USER:$APP_USER $APP_DIR
 sudo -u $APP_USER -H bash -c "cd $APP_DIR && npm install --omit=dev --no-audit --no-fund --loglevel=error" || echo "!! npm install failed (wallet sampler will stay idle)"
 
+# 1b. Agent Studio provider (ERC-8183 best-execution reports) - only once its .env has been uploaded
+[ -f /root/mizan-agent.env ] && install -m 600 -o $APP_USER -g $APP_USER /root/mizan-agent.env $APP_DIR/agent-studio/.env && rm -f /root/mizan-agent.env
+ROUTER=0
+if [ -f $APP_DIR/agent-studio/.env ]; then
+  ROUTER=1
+  sudo -u $APP_USER -H bash -c "cd $APP_DIR/agent-studio && [ -d venv ] || python3 -m venv venv; venv/bin/pip install -q --upgrade pip && venv/bin/pip install -q -r requirements.txt" || echo "!! router venv install failed"
+fi
+
 # 2. systemd units
 cat > /etc/systemd/system/mizan-web.service <<UNIT
 [Unit]
@@ -82,7 +90,22 @@ RestartSec=60
 [Install]
 WantedBy=multi-user.target
 UNIT
+cat > /etc/systemd/system/mizan-router.service <<UNIT
+[Unit]
+Description=Mizan Best-Execution Router (ERC-8183 provider, port 8091)
+After=network-online.target mizan-web.service
+[Service]
+User=$APP_USER
+WorkingDirectory=$APP_DIR/agent-studio
+Environment=HOME=/home/$APP_USER PYTHONUNBUFFERED=1
+ExecStart=$APP_DIR/agent-studio/venv/bin/python scripts/run_agent.py
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+UNIT
 systemctl daemon-reload
+if [ "$ROUTER" = 1 ]; then systemctl enable mizan-router >/dev/null; systemctl restart mizan-router; else echo "-- router: waiting for agent-studio/.env"; fi
 systemctl enable mizan-web mizan-collect mizan-wallet mizan-agent >/dev/null
 systemctl restart mizan-web mizan-collect mizan-wallet mizan-agent
 
@@ -91,7 +114,12 @@ mkdir -p /etc/caddy/sites.d
 cat > /etc/caddy/sites.d/mizan.caddy <<CADDY
 $DOMAIN {
 	encode gzip
-	reverse_proxy 127.0.0.1:8090
+	handle /erc8183* {
+		reverse_proxy 127.0.0.1:8091
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
 }
 CADDY
 cp /etc/caddy/Caddyfile /root/Caddyfile.bak.mizan
@@ -105,6 +133,6 @@ else
 fi
 
 sleep 3
-systemctl is-active mizan-web mizan-collect mizan-wallet mizan-agent agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (mizan-web mizan-collect mizan-wallet mizan-agent agentcensus-web caddy): /'
+systemctl is-active mizan-web mizan-collect mizan-wallet mizan-agent mizan-router agentcensus-web caddy | paste -sd' ' | sed 's/^/-- status (web collect wallet agent router | agentcensus caddy): /'
 curl -s -o /dev/null -w "-- local dashboard: HTTP %{http_code}\n" http://127.0.0.1:8090/
 echo "== Done: https://$DOMAIN (HTTPS once DNS A record -> this server) =="
