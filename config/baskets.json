@@ -1,5 +1,5 @@
 {
-  "_note": "Preset baskets. Only tickers screened Shariah-compliant (held by both SPUS and HLAL) are allowed unless a basket sets allowUnscreened.",
+  "_note": "Preset baskets. Only Shariah-screened tickers (held by SPUS, see config/shariah.json) are allowed unless a basket sets allowUnscreened.",
   "presets": {
     "halal-ai": {
       "name": "Halal AI & Chips",
