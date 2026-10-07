@@ -1,0 +1,16 @@
+# Mizan: demo video script (target 3:30, under 4:00)
+
+| # | Time | On screen | Narration |
+|---|---|---|---|
+| 1 | 0:00 | Title card: "Mizan ميزان: the fair price for tokenized stocks on BNB Chain" | Mizan means balance. It answers one question: what does a tokenized stock on BNB Chain really cost? |
+| 2 | 0:10 | Card: $10k of GOOGLon. Web3 API "best" route: +369%. Agentic Wallet: −0.26% | Buy ten thousand dollars of Google, on BNB Chain, in the same minute. Through the Binance Web3 API's best route, you pay three hundred and sixty-nine percent over fair value. Through the Binance Agentic Wallet, you pay a fair price. Same token, same wallet, two Binance channels. |
+| 3 | 0:30 | Dashboard, top: trap banner and meta line | Every stock exists as up to three tokens: Ondo, Binance bStocks and xStocks. Mizan measures all three, on both channels, against fair value, every five minutes. That's one hundred and seventeen stocks, with real executable quotes at six trade sizes. |
+| 4 | 0:50 | Size buttons ($1k → $10k), tiles change colour | Fair value is the underlying stock price times each issuer's share multiplier. Green is within half a percent of fair, amber within five, red is a trap. Watch what happens to Ondo as the trade size grows. |
+| 5 | 1:05 | Sort: biggest trap first; filters: hide no-liquidity | You can sort by the biggest trap or the biggest discount, filter to Shariah-screened stocks, and hide tokens that have no liquidity at your size. xStocks, for example, can't be bought through the aggregator at all. |
+| 6 | 1:20 | Expand GOOGL, history chart | Each stock keeps its history. This is the real cost over fair of a ten-thousand-dollar Google buy, per issuer, over time. |
+| 7 | 1:32 | Heatmap section | The heatmap shows when it's safe to buy: median cost by hour of day, weekdays and weekends, with the US session outlined. |
+| 8 | 1:45 | Check my trade: GOOGL, $10,000 → verdict + table | Or just ask. Check my trade gives a plain go or no-go: the fairest issuer and channel, what to avoid, and what has no liquidity right now. The same check is a free API for any wallet or agent. |
+| 9 | 2:05 | Card: Shariah basket agent + four real trades with BscScan hashes | Mizan also acts on it. Its basket agent takes plain-English plans, like six dollars into halal AI, screens them against the holdings of a Shariah ETF, and buys each leg through the fairest issuer with the Binance Agentic Wallet. It refuses any fill more than one percent over fair. Four real mainnet trades, all within point four percent of fair. |
+| 10 | 2:30 | Card: Agentic Wallet skill (SKILL.md excerpt) | We packaged the guard as an Agentic Wallet skill. Any agent using the wallet checks Mizan before buying a tokenized stock, refuses bad fills, and verifies its own quote against fair value. |
+| 11 | 2:48 | Card: BNB Agent Studio, agentIds and job #1362 timeline | And Mizan is an agent other agents can hire. It's registered on BNB Agent Studio with an ERC-8004 identity on mainnet and testnet. Through ERC-8183, a buyer hired it to route ten thousand dollars of Google. Mizan delivered its signed report on-chain in thirty-one seconds, and the escrow was settled. |
+| 12 | 3:12 | Closing card: links | Mizan: one index, a check API, a halal basket agent, a wallet skill and a hireable agent. All live at mizan dot greateck dot com. |

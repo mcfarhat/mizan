@@ -4,6 +4,7 @@
 
 *Mizan* is Arabic for "balance" or "scales".
 
+- **Demo video (3 min):** https://youtu.be/2OZoke-dJo8
 - **Live dashboard:** https://mizan.greateck.com
 - **Hire the agent (ERC-8183):** https://mizan.greateck.com/erc8183. BSC mainnet agentId `359180`, testnet agentId `2503`.
 - **Free route API:** `https://mizan.greateck.com/api/route/GOOGL?usd=10000`
